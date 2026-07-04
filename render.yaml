@@ -4,7 +4,7 @@ services:
     runtime: node
     rootDir: server
     plan: free
-    buildCommand: npm install && node -e "require('./db'); console.log('DB OK')" || true
+    buildCommand: npm install
     startCommand: npm start
     envVars:
       - key: DATABASE_URL
@@ -12,7 +12,7 @@ services:
           name: detailpro-db
           property: connectionString
       - key: JWT_SECRET
-        generateValue: true   # Render generates a random secret automatically
+        generateValue: true
       - key: SMTP_HOST
         sync: false
       - key: SMTP_PORT
@@ -35,7 +35,3 @@ services:
 databases:
   - name: detailpro-db
     plan: free
-      - key: DATABASE_URL
-        sync: false
-      - key: JWT_SECRET
-        sync: false
