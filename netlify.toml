@@ -1,0 +1,6 @@
+[build]
+  publish = "."
+
+# This is a plain multi-page static site (index.html, customers.html, etc.)
+# — no build step and no SPA rewrite needed. Netlify will serve each .html
+# file directly.

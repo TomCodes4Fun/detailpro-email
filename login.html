@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign in — DetailPro CRM</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .gradient-bg {
+      background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 60%, #3b82f6 100%);
+    }
+    input:focus { outline: none; box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }
+    .form-input {
+      width: 100%; border: 1px solid #e5e7eb; border-radius: 10px;
+      padding: 10px 14px; font-size: 0.95rem; font-family: inherit;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .form-input:focus { border-color: #2563eb; }
+    .btn-primary {
+      width: 100%; background: #2563eb; color: white; border: none;
+      border-radius: 12px; padding: 12px; font-size: 1rem; font-weight: 600;
+      cursor: pointer; font-family: inherit; transition: background 0.15s;
+    }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-primary:disabled { background: #93c5fd; cursor: default; }
+    .error-box {
+      background: #fef2f2; border: 1px solid #fecaca; color: #dc2626;
+      border-radius: 10px; padding: 10px 14px; font-size: 0.875rem;
+    }
+    .tab { cursor: pointer; padding: 8px 20px; border-radius: 10px; font-weight: 500; transition: all 0.15s; }
+    .tab.active { background: #2563eb; color: white; }
+    .tab:not(.active) { color: #6b7280; }
+    .tab:not(.active):hover { background: #f3f4f6; }
+  </style>
+</head>
+<body class="min-h-screen flex">
+
+  <!-- Left panel — branding -->
+  <div class="hidden lg:flex gradient-bg flex-col justify-between p-12 w-5/12 text-white">
+    <div>
+      <div class="flex items-center space-x-3 mb-16">
+        <div class="w-10 h-10 bg-white bg-opacity-20 rounded-xl flex items-center justify-center">
+          <i class="fas fa-car text-white"></i>
+        </div>
+        <span class="text-xl font-bold">DetailPro CRM</span>
+      </div>
+      <h1 class="text-4xl font-bold leading-tight mb-4">
+        Run your detailing business from anywhere.
+      </h1>
+      <p class="text-blue-100 text-lg leading-relaxed">
+        Customers, appointments, invoices, and automated email reminders — all in one place. Your data syncs across every device.
+      </p>
+    </div>
+
+    <div class="space-y-4">
+      <div class="flex items-center space-x-3 text-blue-100">
+        <i class="fas fa-check-circle text-blue-300"></i>
+        <span>Customer profiles &amp; vehicle history</span>
+      </div>
+      <div class="flex items-center space-x-3 text-blue-100">
+        <i class="fas fa-check-circle text-blue-300"></i>
+        <span>Appointment scheduling &amp; reminders</span>
+      </div>
+      <div class="flex items-center space-x-3 text-blue-100">
+        <i class="fas fa-check-circle text-blue-300"></i>
+        <span>Invoices with automated email delivery</span>
+      </div>
+      <div class="flex items-center space-x-3 text-blue-100">
+        <i class="fas fa-check-circle text-blue-300"></i>
+        <span>Team logins with role-based access</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right panel — form -->
+  <div class="flex-1 flex items-center justify-center p-6 bg-gray-50">
+    <div class="w-full max-w-md">
+
+      <!-- Logo (mobile only) -->
+      <div class="flex items-center space-x-2 mb-8 lg:hidden">
+        <div class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center">
+          <i class="fas fa-car text-white text-sm"></i>
+        </div>
+        <span class="text-lg font-bold text-gray-900">DetailPro CRM</span>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-sm p-8">
+
+        <!-- Tabs -->
+        <div class="flex gap-1 mb-8 p-1 bg-gray-100 rounded-xl">
+          <div id="tabLogin" class="tab active flex-1 text-center" onclick="showTab('login')">Sign in</div>
+          <div id="tabSignup" class="tab flex-1 text-center" onclick="showTab('signup')">Create account</div>
+        </div>
+
+        <!-- Error box (shared) -->
+        <div id="errorBox" class="error-box mb-4 hidden"></div>
+
+        <!-- Sign in form -->
+        <div id="formLogin">
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <input id="loginEmail" type="email" class="form-input" placeholder="you@example.com" autocomplete="email">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <input id="loginPassword" type="password" class="form-input" placeholder="••••••••" autocomplete="current-password">
+            </div>
+            <button id="loginBtn" class="btn-primary mt-2" onclick="doLogin()">
+              Sign in
+            </button>
+          </div>
+          <p class="text-center text-sm text-gray-500 mt-4">
+            No account yet?
+            <span class="text-blue-600 font-medium cursor-pointer hover:underline" onclick="showTab('signup')">Create one free</span>
+          </p>
+        </div>
+
+        <!-- Sign up form -->
+        <div id="formSignup" class="hidden">
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Business name</label>
+              <input id="signupBiz" type="text" class="form-input" placeholder="My Detailing Business">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Your name</label>
+              <input id="signupName" type="text" class="form-input" placeholder="Jane Smith">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <input id="signupEmail" type="email" class="form-input" placeholder="you@example.com" autocomplete="email">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <input id="signupPassword" type="password" class="form-input" placeholder="8+ characters" autocomplete="new-password">
+            </div>
+            <button id="signupBtn" class="btn-primary mt-2" onclick="doSignup()">
+              Create account
+            </button>
+          </div>
+          <p class="text-center text-sm text-gray-500 mt-4">
+            Already have an account?
+            <span class="text-blue-600 font-medium cursor-pointer hover:underline" onclick="showTab('login')">Sign in</span>
+          </p>
+        </div>
+
+      </div>
+
+      <p class="text-center text-xs text-gray-400 mt-6">
+        DetailPro CRM &mdash; Auto Detailing Business Software
+      </p>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="api-client.js"></script>
+  <script>
+    // If already logged in, skip to dashboard.
+    (function () {
+      try {
+        const session = JSON.parse(localStorage.getItem('dp_auth_session') || 'null');
+        if (session && localStorage.getItem('dp_auth_token')) {
+          location.href = 'index.html';
+        }
+      } catch (e) {}
+    })();
+
+    function showTab(tab) {
+      document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+      document.getElementById('tabSignup').classList.toggle('active', tab === 'signup');
+      document.getElementById('formLogin').classList.toggle('hidden', tab !== 'login');
+      document.getElementById('formSignup').classList.toggle('hidden', tab !== 'signup');
+      hideError();
+    }
+
+    function showError(msg) {
+      const box = document.getElementById('errorBox');
+      box.textContent = msg;
+      box.classList.remove('hidden');
+    }
+
+    function hideError() {
+      document.getElementById('errorBox').classList.add('hidden');
+    }
+
+    function setLoading(btnId, loading) {
+      const btn = document.getElementById(btnId);
+      btn.disabled = loading;
+      btn.textContent = loading ? 'Please wait…' : (btnId === 'loginBtn' ? 'Sign in' : 'Create account');
+    }
+
+    async function doLogin() {
+      hideError();
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      if (!email || !password) { showError('Email and password are required.'); return; }
+
+      setLoading('loginBtn', true);
+      try {
+        await window.dpAuth.login(email, password);
+        // Pull server data into localStorage before navigating so the
+        // dashboard renders populated even on first load.
+        await window.dpSync.pull();
+        location.href = 'index.html';
+      } catch (e) {
+        showError(e.offline
+          ? 'Could not reach the server. Check your internet connection and try again.'
+          : (e.message || 'Sign in failed. Check your email and password.'));
+      } finally {
+        setLoading('loginBtn', false);
+      }
+    }
+
+    async function doSignup() {
+      hideError();
+      const biz = document.getElementById('signupBiz').value.trim();
+      const name = document.getElementById('signupName').value.trim();
+      const email = document.getElementById('signupEmail').value.trim();
+      const password = document.getElementById('signupPassword').value;
+
+      if (!name || !email || !password) { showError('All fields are required.'); return; }
+      if (password.length < 8) { showError('Password must be at least 8 characters.'); return; }
+
+      setLoading('signupBtn', true);
+      try {
+        await window.dpAuth.signup(email, password, name, biz || 'My Detailing Business');
+        location.href = 'index.html';
+      } catch (e) {
+        showError(e.offline
+          ? 'Could not reach the server. Check your internet connection and try again.'
+          : (e.message || 'Could not create account. Please try again.'));
+      } finally {
+        setLoading('signupBtn', false);
+      }
+    }
+
+    // Allow Enter key to submit
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return;
+      const activeTab = document.getElementById('formLogin').classList.contains('hidden') ? 'signup' : 'login';
+      if (activeTab === 'login') doLogin();
+      else doSignup();
+    });
+  </script>
+</body>
+</html>

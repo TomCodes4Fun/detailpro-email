@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DetailPro CRM - Invoices</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .font-display { font-family: 'Playfair Display', serif; }
+        .font-body { font-family: 'Inter', sans-serif; }
+        .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .btn-primary { background: linear-gradient(135deg, #3b82f6, #1e40af); }
+        .btn-accent { background: linear-gradient(135deg, #f97316, #ea580c); }
+        .status-paid { background: linear-gradient(135deg, #10b981, #059669); }
+        .status-unpaid { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .nav-bottom { bottom: 0; left: 0; right: 0; z-index: 50; }
+        .modal-backdrop { background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
+            .content-padding { padding-bottom: 80px; }
+    </style>
+</head>
+<body class="bg-gray-50 font-body pb-28">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 p-4">
+        <div class="flex items-center justify-between max-w-6xl mx-auto">
+            <div class="flex items-center space-x-3">
+                <img src="resources/logo.png" alt="DetailPro" class="w-8 h-8">
+                <h1 class="font-display text-xl font-bold text-blue-600">Invoices</h1>
+            </div>
+            <button onclick="openModal('createInvoiceModal')" class="btn-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">
+                <i class="fas fa-plus mr-2"></i>New Invoice
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto p-4 space-y-4">
+        <!-- Summary -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div id="invoice-${inv.id}" class="bg-white rounded-xl p-4 card-shadow">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600">Unpaid</p>
+                        <p class="text-2xl font-bold text-gray-900" id="unpaidCount">0</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
+                        <i class="fas fa-clock text-amber-600"></i>
+                    </div>
+                </div>
+            </div>
+            <div id="invoice-${inv.id}" class="bg-white rounded-xl p-4 card-shadow">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600">Paid</p>
+                        <p class="text-2xl font-bold text-gray-900" id="paidCount">0</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center">
+                        <i class="fas fa-check text-emerald-600"></i>
+                    </div>
+                </div>
+            </div>
+            <div id="invoice-${inv.id}" class="bg-white rounded-xl p-4 card-shadow">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600">Total Outstanding</p>
+                        <p class="text-2xl font-bold text-gray-900" id="outstandingTotal">$0</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+                        <i class="fas fa-dollar-sign text-blue-600"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div id="invoice-${inv.id}" class="bg-white rounded-xl p-4 card-shadow">
+            <div class="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+                <div class="relative flex-1">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <input id="invoiceSearch" type="text" placeholder="Search by customer or invoice #"
+                        class="w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div class="flex gap-2">
+                    <button id="filterAll" onclick="setInvoiceFilter('all')" class="px-3 py-2 rounded-lg text-sm font-medium bg-blue-50 text-blue-700">All</button>
+                    <button id="filterUnpaid" onclick="setInvoiceFilter('unpaid')" class="px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Unpaid</button>
+                    <button id="filterPaid" onclick="setInvoiceFilter('paid')" class="px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Paid</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- List -->
+        <div id="invoiceList" class="space-y-3"></div>
+        <div id="emptyState" class="hidden bg-white rounded-xl p-8 text-center card-shadow">
+            <div class="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-file-invoice-dollar text-blue-600 text-2xl"></i>
+            </div>
+            <h2 class="text-lg font-semibold text-gray-900 mb-1">No invoices yet</h2>
+            <p class="text-gray-600 mb-4">Create your first invoice in seconds.</p>
+        </div>
+    </main>
+
+    <!-- Create Invoice Modal -->
+    <div id="createInvoiceModal" class="hidden fixed inset-0 z-50">
+        <div class="modal-backdrop absolute inset-0" onclick="closeModal('createInvoiceModal')"></div>
+        <div class="relative max-w-lg mx-auto mt-16 bg-white rounded-2xl card-shadow p-5">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Create Invoice</h3>
+                <button onclick="closeModal('createInvoiceModal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form id="createInvoiceForm" class="space-y-3">
+                <div>
+                    <label class="text-sm font-medium text-gray-700">Customer</label>
+                    <input id="invoiceCustomer" type="text" placeholder="Customer name"
+                        class="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                </div>
+
+                <div>
+                    <label class="text-sm font-medium text-gray-700">Linked Appointment (optional)</label>
+                    <select id="invoiceAppointment" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">— None —</option>
+                    </select>
+                    <p class="text-xs text-gray-400 mt-1">Pick an appointment to auto-fill amount and link records.</p>
+                </div>
+
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-sm font-medium text-gray-700">Amount</label>
+                        <input id="invoiceAmount" type="number" min="0" step="0.01" placeholder="0.00"
+                            class="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-700">Status</label>
+                        <select id="invoiceStatus" class="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="unpaid">Unpaid</option>
+                            <option value="paid">Paid</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-sm font-medium text-gray-700">Payment Method (optional)</label>
+                    <select id="invoiceMethod" class="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">—</option>
+                        <option value="cash">Cash</option>
+                        <option value="card">Card</option>
+                        <option value="zelle">Zelle</option>
+                        <option value="venmo">Venmo</option>
+                        <option value="cashapp">Cash App</option>
+                        <option value="check">Check</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="flex items-center justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeModal('createInvoiceModal')" class="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90">
+                        Create
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="hidden fixed top-4 right-4 max-w-sm z-50"></div>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed nav-bottom bg-white border-t border-gray-200 p-4">
+        <div class="flex justify-around max-w-md mx-auto">
+            <a href="index.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-home text-xl mb-1"></i>
+                <span class="text-xs">Dashboard</span>
+            </a>
+            <a href="customers.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-users text-xl mb-1"></i>
+                <span class="text-xs">Customers</span>
+            </a>
+            <a href="appointments.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-calendar text-xl mb-1"></i>
+                <span class="text-xs">Schedule</span>
+            </a>
+            <a href="invoices.html" class="flex flex-col items-center text-blue-600">
+                <i class="fas fa-file-invoice-dollar text-xl mb-1"></i>
+                <span class="text-xs">Invoices</span>
+            </a>
+            <a href="services.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-concierge-bell text-xl mb-1"></i>
+                <span class="text-xs">Services</span>
+            </a>
+            <a href="notifications.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-bell text-xl mb-1"></i>
+                <span class="text-xs">Alerts</span>
+            </a>
+        </div>
+    </nav>
+
+    <script src="config.js"></script>
+  <script src="api-client.js"></script>
+  <script src="main-enhanced.js"></script>
+    <script src="notifications.js"></script>
+<script>
+        function getAppointments() {
+            return JSON.parse(localStorage.getItem('appointments') || '[]');
+        }
+
+        function getInvoices() {
+            return JSON.parse(localStorage.getItem('invoices') || '[]');
+        }
+        function setInvoices(invoices) {
+            localStorage.setItem('invoices', JSON.stringify(invoices));
+        }
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+        function generateInvoiceNumber() {
+            const invoices = getInvoices();
+            const next = invoices.length + 1;
+            return 'INV-' + String(next).padStart(4, '0');
+        }
+
+        let currentFilter = 'all';
+
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+        function populateInvoiceAppointmentOptions(customerName){
+            const sel = document.getElementById('invoiceAppointment');
+            if (!sel) return;
+            const name = String(customerName || '').trim().toLowerCase();
+            const appts = getAppointments().filter(a => (a.customer || '').toLowerCase().includes(name));
+            const options = appts
+                .sort((a,b)=> new Date(`${b.date}T${b.time||'00:00'}`) - new Date(`${a.date}T${a.time||'00:00'}`))
+                .slice(0, 25)
+                .map(a => {
+                    const when = `${a.date || ''}${a.time ? ' ' + a.time : ''}`.trim();
+                    const label = `${when} • ${a.service || 'Service'} • ${String(a.status || 'scheduled').replace(/-/g,' ')}`;
+                    return `<option value="${a.id}">${label}</option>`;
+                }).join('');
+            sel.innerHTML = `<option value="">— None —</option>` + options;
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+            if (id === 'createInvoiceModal') {
+                document.getElementById('createInvoiceForm').reset();
+                const sel = document.getElementById('invoiceAppointment');
+                if (sel) sel.innerHTML = '<option value="">— None —</option>';
+            }
+        }
+
+        function showNotification(message, type='success') {
+            const notification = document.getElementById('notification');
+            const colors = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                info: 'bg-blue-500',
+                warning: 'bg-amber-500'
+            };
+            notification.innerHTML = `
+                <div class="${colors[type] || colors.info} text-white px-4 py-3 rounded-lg shadow-lg flex items-center justify-between">
+                    <span class="text-sm">${message}</span>
+                    <button onclick="hideNotification()" class="ml-3 opacity-80 hover:opacity-100">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            notification.classList.remove('hidden');
+            setTimeout(hideNotification, 3500);
+        }
+        function hideNotification() {
+            document.getElementById('notification').classList.add('hidden');
+        }
+
+        function formatMoney(amount) {
+            const n = Number(amount || 0);
+            return n.toLocaleString(undefined, { style: 'currency', currency: 'USD' });
+        }
+
+        function parseMoney(value) {
+            if (typeof value === 'number') return value;
+            if (value == null) return 0;
+            const s = String(value).trim();
+            if (!s) return 0;
+            // Allow "250", "250.00", "$250.00", "USD 250.00" etc.
+            const cleaned = s.replace(/[^0-9.\-]/g, '');
+            const n = Number(cleaned);
+            return isNaN(n) ? 0 : n;
+        }
+
+        // Compute appointment total reliably even for older appointments that
+        // did not store pricing snapshots.
+        function getAppointmentTotal(apt) {
+            if (!apt) return 0;
+            // Preferred: stored numeric snapshot
+            if (typeof apt.totalPrice !== 'undefined') return parseMoney(apt.totalPrice);
+            if (typeof apt.price !== 'undefined') return parseMoney(apt.price);
+
+            // Fallback: compute from service + add-ons if catalog helpers exist
+            try {
+                const svc = (typeof getServiceById === 'function') ? getServiceById(apt.service || apt.serviceId) : null;
+                const base = svc ? Number(svc.price || 0) : 0;
+                let addons = 0;
+                const addonIds = Array.isArray(apt.addons) ? apt.addons : [];
+                addonIds.forEach(id => {
+                    const ad = (typeof getAddonById === 'function') ? getAddonById(id) : null;
+                    addons += ad ? Number(ad.price || 0) : 0;
+                });
+                return Number(base) + Number(addons);
+            } catch (e) {
+                return 0;
+            }
+        }
+
+        function getStatusBadge(status) {
+            if (status === 'paid') return `<span class="status-paid text-white text-xs px-2 py-1 rounded-full">Paid</span>`;
+            return `<span class="status-unpaid text-white text-xs px-2 py-1 rounded-full">Unpaid</span>`;
+        }
+
+        function setInvoiceFilter(filter) {
+            currentFilter = filter;
+            document.getElementById('filterAll').className = 'px-3 py-2 rounded-lg text-sm font-medium ' + (filter==='all' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50');
+            document.getElementById('filterUnpaid').className = 'px-3 py-2 rounded-lg text-sm font-medium ' + (filter==='unpaid' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50');
+            document.getElementById('filterPaid').className = 'px-3 py-2 rounded-lg text-sm font-medium ' + (filter==='paid' ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50');
+            renderInvoices();
+        }
+
+        function matchesSearch(invoice, q) {
+            if (!q) return true;
+            const s = q.toLowerCase();
+            return (invoice.customer || '').toLowerCase().includes(s) || (invoice.invoiceNumber || '').toLowerCase().includes(s);
+        }
+
+        function updateSummary(invoices) {
+            const unpaid = invoices.filter(i => (i.status || 'unpaid') !== 'paid');
+            const paid = invoices.filter(i => (i.status || 'unpaid') === 'paid');
+            const outstanding = unpaid.reduce((sum, i) => sum + Number(i.amount || 0), 0);
+
+            document.getElementById('unpaidCount').textContent = unpaid.length;
+            document.getElementById('paidCount').textContent = paid.length;
+            document.getElementById('outstandingTotal').textContent = formatMoney(outstanding);
+        }
+
+        function togglePaid(invoiceId) {
+            if (typeof window.dpIsAdmin === 'function' && !dpIsAdmin()) {
+                showNotification('Admin only action', 'info');
+                return;
+            }
+            const invoices = getInvoices();
+            const inv = invoices.find(i => i.id === invoiceId);
+            if (!inv) return;
+
+            const currentlyPaid = (inv.status || 'unpaid') === 'paid';
+            const msg = currentlyPaid ? 'Mark this invoice as unpaid?' : 'Mark this invoice as paid?';
+            if (!(window.dpConfirm ? dpConfirm(msg) : confirm(msg))) return;
+
+            if (currentlyPaid) {
+                inv.status = 'unpaid';
+                inv.paidAt = null;
+                showNotification('Marked as unpaid', 'info');
+            } else {
+                inv.status = 'paid';
+                inv.paidAt = new Date().toISOString();
+                showNotification('Marked as paid', 'success');
+
+                // Trigger receipt notification (email via mailto) if enabled
+                try {
+                    if (window.NotificationCenter) {
+                        const customers = JSON.parse(localStorage.getItem('customers') || '[]');
+                        const custName = String(inv.customer || '').trim().toLowerCase();
+                        const customer = customers.find(c => (`${c.firstName} ${c.lastName}`.trim().toLowerCase() === custName)) || {};
+                        const appointments = JSON.parse(localStorage.getItem('appointments') || '[]');
+                        const apt = appointments.find(a => a.id === inv.appointmentId) || {};
+
+                        const formatDate = (d) => {
+                            if (!d) return '';
+                            const date = new Date(d);
+                            return isNaN(date.getTime()) ? String(d) : date.toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
+                        };
+                        const formatTime = (t) => {
+                            if (!t) return '';
+                            // Expect HH:MM in 24h
+                            const parts = String(t).split(':');
+                            if (parts.length < 2) return String(t);
+                            const hh = parseInt(parts[0], 10);
+                            const mm = parts[1];
+                            const hour = ((hh + 11) % 12) + 1;
+                            const ampm = hh >= 12 ? 'PM' : 'AM';
+                            return `${hour}:${mm} ${ampm}`;
+                        };
+
+                        // Service lookup from catalog
+                        const serviceCatalog = JSON.parse(localStorage.getItem('servicesCatalog') || '[]');
+                        const svc = serviceCatalog.find(s => s.id === apt.service) || {};
+                        const serviceName = svc.name || apt.serviceName || apt.service || 'Service';
+
+                        window.NotificationCenter.trigger('receipt', {
+                            customerName: (inv.customer || `${customer.firstName || ''} ${customer.lastName || ''}`).trim() || 'Customer',
+                            email: customer.email || '',
+                            date: formatDate(apt.date),
+                            time: formatTime(apt.time),
+                            service: serviceName,
+                            total: `$${Number(inv.amount || 0).toFixed(2)}`,
+                            invoiceNumber: inv.invoiceNumber || ''
+                        });
+                    }
+                } catch (e) {}
+            }
+            setInvoices(invoices);
+            renderInvoices();
+        }
+
+        function editInvoiceAmount(invoiceId) {
+            if (typeof window.dpIsAdmin === 'function' && !dpIsAdmin()) {
+                showNotification('Admin only action', 'info');
+                return;
+            }
+
+            const invoices = getInvoices();
+            const inv = invoices.find(i => i.id === invoiceId);
+            if (!inv) return;
+
+            const current = parseMoney(inv.amount);
+            const input = prompt('Enter invoice amount (USD):', String(current.toFixed(2)));
+            if (input == null) return;
+            const next = parseMoney(input);
+            if (isNaN(next) || next < 0) {
+                showNotification('Enter a valid amount', 'error');
+                return;
+            }
+
+            inv.amount = next;
+            setInvoices(invoices);
+            showNotification('Invoice amount updated', 'success');
+            renderInvoices();
+        }
+
+        function deleteInvoice(invoiceId) {
+            const all = getInvoices();
+            const inv = all.find(i => i.id === invoiceId);
+            if (!inv) return;
+
+            if (String(inv.status || 'unpaid').toLowerCase() === 'paid') {
+                showNotification('Paid invoices are read-only.', 'info');
+                return;
+            }
+
+            if (!(window.dpConfirm ? dpConfirm('Delete this invoice?') : confirm('Delete this invoice?'))) return;
+
+            const invoices = all.filter(i => i.id !== invoiceId);
+            setInvoices(invoices);
+
+            // Unlink from appointment (if this invoice was linked)
+            if (inv.appointmentId) {
+                const appts = getAppointments();
+                const updated = appts.map(a => {
+                    if (String(a.id) !== String(inv.appointmentId)) return a;
+                    const next = { ...a };
+                    // Remove the backlink so the appointment doesn't point to a deleted invoice.
+                    delete next.invoiceId;
+                    if (String(next.paymentStatus || '').toLowerCase() === 'paid') {
+                        // Only clear payment status when it was derived from the invoice.
+                        delete next.paymentStatus;
+                    }
+                    return next;
+                });
+                localStorage.setItem('appointments', JSON.stringify(updated));
+            }
+            showNotification('Invoice deleted', 'info');
+            renderInvoices();
+        }
+
+        function renderInvoices() {
+            const list = document.getElementById('invoiceList');
+            const empty = document.getElementById('emptyState');
+            const q = document.getElementById('invoiceSearch').value.trim();
+
+            let invoices = getInvoices();
+            invoices.sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+            updateSummary(invoices);
+
+            invoices = invoices.filter(inv => {
+                const st = inv.status || 'unpaid';
+                const okStatus = currentFilter === 'all' ? true : st === currentFilter;
+                return okStatus && matchesSearch(inv, q);
+            });
+
+            if (getInvoices().length === 0) {
+                list.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            } else {
+                empty.classList.add('hidden');
+            }
+
+            if (invoices.length === 0) {
+                list.innerHTML = `
+                    <div class="bg-white rounded-xl p-6 card-shadow text-center text-gray-600">
+                        No invoices match your filter/search.
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = invoices.map(inv => `
+                <div id="invoice-${inv.id}" class="bg-white rounded-xl p-4 card-shadow">
+                    <div class="flex items-start justify-between gap-3">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <p class="font-semibold text-gray-900">${inv.invoiceNumber || 'INV-????'}</p>
+                                ${getStatusBadge(inv.status || 'unpaid')}
+                            </div>
+                            <p class="text-sm text-gray-700 mt-1">${inv.customer || '—'}</p>
+                            <p class="text-xs text-gray-500 mt-1">
+                                Created: ${inv.createdAt ? new Date(inv.createdAt).toLocaleString() : '—'}
+                                ${inv.appointmentId ? ` • <a class='underline' href='appointments.html#appointment=${encodeURIComponent(inv.appointmentId)}'>View appointment</a>` : ''}
+                            </p>
+                            <p class="text-lg font-bold text-gray-900 mt-2">${formatMoney(inv.amount)}</p>
+                            ${(inv.status === 'paid' && inv.method) ? `<p class="text-xs text-gray-500 mt-1">Method: ${inv.method}</p>` : ''}
+                        </div>
+
+                        <div class="flex flex-col gap-2">
+                            <button onclick="togglePaid('${inv.id}')" class="px-3 py-2 rounded-lg text-sm font-medium ${(inv.status || 'unpaid') === 'paid' ? 'text-gray-700 hover:bg-gray-50' : 'btn-primary text-white hover:opacity-90'}">
+                                <i class="fas fa-${(inv.status || 'unpaid') === 'paid' ? 'undo' : 'check'} mr-2"></i>
+                                ${(inv.status || 'unpaid') === 'paid' ? 'Mark Unpaid' : 'Mark Paid'}
+                            </button>
+                            <button onclick="editInvoiceAmount('${inv.id}')" class="px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                <i class="fas fa-dollar-sign mr-2"></i>Edit Amount
+                            </button>
+                            <button onclick="deleteInvoice('${inv.id}')" class="px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50">
+                                <i class="fas fa-trash mr-2"></i>Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            anime({
+                targets: '#invoiceList > div',
+                opacity: [0, 1],
+                translateY: [10, 0],
+                delay: anime.stagger(60),
+                duration: 450,
+                easing: 'easeOutCubic'
+            });
+        }
+
+        document.getElementById('invoiceCustomer').addEventListener('input', function(){
+            populateInvoiceAppointmentOptions(this.value);
+        });
+        document.getElementById('invoiceCustomer').addEventListener('focus', function(){
+            populateInvoiceAppointmentOptions(this.value);
+        });
+        document.getElementById('invoiceAppointment').addEventListener('change', function(){
+            const id = this.value;
+            if (!id) return;
+            const apt = getAppointments().find(a => String(a.id) === String(id));
+            if (!apt) return;
+            // sync customer + amount
+            const cust = document.getElementById('invoiceCustomer');
+            if (cust && !cust.value.trim()) cust.value = apt.customer || '';
+            const amt = document.getElementById('invoiceAmount');
+            if (amt) amt.value = getAppointmentTotal(apt);
+        });
+
+        document.getElementById('createInvoiceForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const customer = document.getElementById('invoiceCustomer').value.trim();
+            const amount = parseMoney(document.getElementById('invoiceAmount').value);
+            const status = document.getElementById('invoiceStatus').value;
+            const method = document.getElementById('invoiceMethod').value;
+            const appointmentId = (document.getElementById('invoiceAppointment')?.value || null) || null;
+
+            if (!customer) { showNotification('Customer name is required', 'error'); return; }
+            if (isNaN(amount) || amount < 0) { showNotification('Enter a valid amount', 'error'); return; }
+
+            const invoices = getInvoices();
+            const invoice = {
+                id: generateId(),
+                invoiceNumber: generateInvoiceNumber(),
+                customer,
+                amount,
+                status,
+                method: status === 'paid' ? (method || '') : '',
+                appointmentId: appointmentId,
+                createdAt: new Date().toISOString(),
+                paidAt: status === 'paid' ? new Date().toISOString() : null
+            };
+            invoices.push(invoice);
+            setInvoices(invoices);
+            // Link back to appointment if selected
+            if (appointmentId) {
+                const appts = getAppointments();
+                const updated = appts.map(a => {
+                    if (String(a.id) !== String(appointmentId)) return a;
+                    const patch = { invoiceId: invoice.id };
+                    if (invoice.status === 'paid') patch.paymentStatus = 'paid';
+                    return { ...a, ...patch };
+                });
+                localStorage.setItem('appointments', JSON.stringify(updated));
+            }
+
+            closeModal('createInvoiceModal');
+            showNotification('Invoice created', 'success');
+            renderInvoices();
+        });
+
+        function bootstrapFromQuery() {
+            const params = new URLSearchParams(window.location.search);
+            const fromApt = params.get('fromAppointment');
+            if (!fromApt) return;
+
+            window.history.replaceState({}, document.title, 'invoices.html');
+
+            const appointments = JSON.parse(localStorage.getItem('appointments') || '[]');
+            const apt = appointments.find(a => a.id === fromApt);
+            if (!apt) { showNotification('Appointment not found for invoice creation', 'warning'); return; }
+
+            const invoices = getInvoices();
+            const existing = invoices.find(i => i.appointmentId === apt.id);
+            if (existing) {
+                showNotification('Invoice already exists for that appointment', 'info');
+                // Focus the existing invoice card
+                window.location.hash = `invoice=${encodeURIComponent(existing.id)}`;
+                return;
+            }
+
+            const invoice = {
+                id: generateId(),
+                invoiceNumber: generateInvoiceNumber(),
+                customer: apt.customer || '—',
+                amount: getAppointmentTotal(apt),
+                status: 'unpaid',
+                method: '',
+                appointmentId: apt.id,
+                createdAt: new Date().toISOString(),
+                paidAt: null
+            };
+            invoices.push(invoice);
+            setInvoices(invoices);
+            // Back-link appointment
+            const appts = getAppointments();
+            const updated = appts.map(a => (String(a.id)===String(apt.id)) ? { ...a, invoiceId: invoice.id } : a);
+            localStorage.setItem('appointments', JSON.stringify(updated));
+
+            showNotification('Invoice created from appointment', 'success');
+            // Focus the newly created invoice card
+            window.location.hash = `invoice=${encodeURIComponent(invoice.id)}`;
+        }
+
+        document.getElementById('invoiceSearch').addEventListener('input', renderInvoices);
+        bootstrapFromQuery();
+        renderInvoices();
+        focusInvoiceFromHash();
+
+        function focusInvoiceFromHash(){
+            const h = (window.location.hash || '').replace('#','');
+            if (!h.startsWith('invoice=')) return;
+            const id = decodeURIComponent(h.split('=')[1] || '');
+            if (!id) return;
+            let tries = 0;
+            const t = setInterval(() => {
+                tries++;
+                const el = document.getElementById('invoice-' + id);
+                if (el){
+                    el.classList.add('ring-2','ring-blue-500');
+                    el.scrollIntoView({behavior:'smooth', block:'center'});
+                    clearInterval(t);
+                }
+                if (tries > 15) clearInterval(t);
+            }, 200);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DetailPro CRM - Customer Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .font-display { font-family: 'Playfair Display', serif; }
+        .font-body { font-family: 'Inter', sans-serif; }
+        .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .btn-primary { background: linear-gradient(135deg, #3b82f6, #1e40af); }
+        .btn-accent { background: linear-gradient(135deg, #f97316, #ea580c); }
+        .text-primary { color: #1e293b; }
+        .content-padding { padding-bottom: 80px; }
+        .pill { border: 1px solid rgba(0,0,0,0.08); }
+    </style>
+</head>
+
+<body class="bg-gray-50 font-body">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 p-4">
+        <div class="flex items-center justify-between max-w-6xl mx-auto">
+            <div class="flex items-center space-x-3">
+                <a href="customers.html" class="w-10 h-10 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50" title="Back">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div>
+                    <h1 class="font-display text-xl font-bold text-primary" id="customerName">Customer Profile</h1>
+                    <p class="text-sm text-gray-500" id="customerSub">Loading…</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <a id="editCustomerBtn" href="customers.html" class="px-4 py-2 rounded-lg text-sm font-medium border border-gray-200 hover:bg-gray-50">
+                    <i class="fas fa-edit mr-2"></i>Edit
+                </a>
+
+                <button id="permanentDeleteCustomerBtn" class="px-4 py-2 rounded-lg text-sm font-medium bg-red-600 text-white hover:bg-red-700" title="Permanently delete customer">
+                    <i class="fas fa-trash mr-2"></i>Delete
+                </button>
+
+                <button id="archiveCustomerBtn" class="px-4 py-2 rounded-lg text-sm font-medium bg-gray-900 text-white hover:bg-gray-800" title="Archive customer">
+                    <i class="fas fa-archive mr-2"></i>Archive
+                </button>
+
+                <a href="appointments.html" class="px-4 py-2 rounded-lg text-sm font-medium border border-gray-200 hover:bg-gray-50">
+                    <i class="fas fa-calendar mr-2"></i>Schedule
+                </a>
+<a href="invoices.html" class="px-4 py-2 rounded-lg text-sm font-medium border border-gray-200 hover:bg-gray-50">
+                    <i class="fas fa-file-invoice-dollar mr-2"></i>Invoices
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main -->
+    <main class="max-w-6xl mx-auto p-4 content-padding">
+        <!-- Summary Card -->
+        <section class="mb-6">
+            <div class="bg-white p-5 rounded-xl card-shadow border border-gray-100">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg" id="customerInitials">DP</div>
+                        <div>
+                            <p class="text-sm text-gray-500">Contact</p>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="pill px-3 py-1 rounded-full text-sm bg-gray-50" id="customerPhone">—</span>
+                                <span class="pill px-3 py-1 rounded-full text-sm bg-gray-50" id="customerEmail">—</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-3">
+                        <div class="bg-blue-50 px-4 py-3 rounded-xl text-center">
+                            <p class="text-xs text-gray-600">Total Visits</p>
+                            <p class="text-2xl font-bold text-blue-700" id="totalVisits">0</p>
+                        </div>
+                        <div class="bg-emerald-50 px-4 py-3 rounded-xl text-center">
+                            <p class="text-xs text-gray-600">Total Spent</p>
+                            <p class="text-2xl font-bold text-emerald-700" id="totalSpent">$0</p>
+                        </div>
+                        <div class="bg-purple-50 px-4 py-3 rounded-xl text-center">
+                            <p class="text-xs text-gray-600">Last Visit</p>
+                            <p class="text-sm font-semibold text-purple-700" id="lastVisit">—</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-5 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-gray-50 p-4 rounded-xl">
+                        <p class="text-sm text-gray-600 mb-1">Vehicle</p>
+                        <p class="font-semibold text-gray-900" id="vehicleLine">—</p>
+                        <p class="text-sm text-gray-500" id="vehicleLine2">—</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-xl md:col-span-2">
+                        <p class="text-sm text-gray-600 mb-2">Quick Actions</p>
+                        <div class="flex flex-wrap gap-2">
+                            <button id="btnCall" class="px-4 py-2 rounded-lg text-sm font-medium bg-green-600 text-white hover:bg-green-700">
+                                <i class="fas fa-phone mr-2"></i>Call
+                            </button>
+                            <a id="btnBook" href="appointments.html" class="px-4 py-2 rounded-lg text-sm font-medium btn-accent text-white hover:opacity-90">
+                                <i class="fas fa-calendar-plus mr-2"></i>Book Appointment
+                            </a>
+                            <button id="btnCopy" class="px-4 py-2 rounded-lg text-sm font-medium border border-gray-200 hover:bg-gray-50">
+                                <i class="fas fa-copy mr-2"></i>Copy Contact
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- History + Notes -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Appointment History -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-xl card-shadow border border-gray-100 overflow-hidden">
+                    <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+                        <h2 class="font-display text-lg font-bold text-primary">Service History</h2>
+                        <span class="text-sm text-gray-500" id="historyCount">0 records</span>
+                    </div>
+                    <div id="historyList" class="divide-y divide-gray-200">
+                        <!-- populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            
+            <!-- Customer Timeline -->
+            <div class="bg-white rounded-2xl card-shadow p-6 mt-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-semibold text-primary">Timeline</h2>
+                        <p class="text-sm text-gray-500">Appointments and invoices in one place.</p>
+                    </div>
+                    <span id="timelineCount" class="pill px-3 py-1 rounded-full text-sm text-gray-600">0 items</span>
+                </div>
+
+                <div id="timelineList" class="mt-4 space-y-3">
+                    <!-- populated by JS -->
+                </div>
+            </div>
+
+<!-- Notes -->
+            <div>
+                <div class="bg-white rounded-xl card-shadow border border-gray-100 overflow-hidden">
+                    <div class="p-4 border-b border-gray-200">
+                        <h2 class="font-display text-lg font-bold text-primary">Customer Notes</h2>
+                        <p class="text-sm text-gray-500">Internal notes (not visible to customers)</p>
+                    </div>
+                    <div class="p-4">
+                        <form id="noteForm" class="space-y-3">
+                            <textarea id="noteText" rows="3" placeholder="e.g., prefers fragrance-free products; pet hair in rear seats; small scratch on driver door…" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                            <button class="w-full py-2 px-4 rounded-lg btn-primary text-white font-medium hover:opacity-90" type="submit">
+                                <i class="fas fa-plus mr-2"></i>Add Note
+                            </button>
+                        </form>
+
+                        <div class="mt-4 space-y-3" id="notesList">
+                            <!-- notes -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 p-4">
+        <div class="flex justify-around max-w-md mx-auto">
+            <a href="index.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-home text-xl mb-1"></i>
+                <span class="text-xs">Invoices</span>
+            </a>
+            <a href="customers.html" class="flex flex-col items-center text-blue-600">
+                <i class="fas fa-users text-xl mb-1"></i>
+                <span class="text-xs">Customers</span>
+            </a>
+            <a href="appointments.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-calendar text-xl mb-1"></i>
+                <span class="text-xs">Schedule</span>
+            </a>
+            <a href="services.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-concierge-bell text-xl mb-1"></i>
+                <span class="text-xs">Services</span>
+            </a>
+            <a href="notifications.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-bell text-xl mb-1"></i>
+                <span class="text-xs">Alerts</span>
+            </a>
+        </div>
+    </nav>
+
+    <script src="config.js"></script>
+  <script src="api-client.js"></script>
+  <script src="main-enhanced.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+        const archiveBtn = document.getElementById('archiveCustomerBtn');
+        if (archiveBtn) archiveBtn.addEventListener('click', handleArchiveCustomer);
+
+        const permDeleteBtn = document.getElementById('permanentDeleteCustomerBtn');
+        if (permDeleteBtn) permDeleteBtn.addEventListener('click', handlePermanentDeleteCustomer);
+            const params = new URLSearchParams(window.location.search);
+            const customerId = params.get('id');
+
+            if (!customerId) {
+                showNotification('Missing customer id', 'error');
+                return;
+            }
+
+            const customer = getCustomers().find(c => c.id === customerId);
+            if (!customer) {
+                showNotification('Customer not found', 'error');
+                return;
+            }
+
+            renderCustomer(customer);
+            renderHistory(customer);
+            renderTimeline(customer);
+            renderNotes(customerId);
+
+            document.getElementById('noteForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const text = (document.getElementById('noteText').value || '').trim();
+                if (!text) return;
+                addNote(customerId, text);
+                document.getElementById('noteText').value = '';
+                renderNotes(customerId);
+                showNotification('Note added', 'success');
+            });
+
+            anime({
+                targets: 'section .card-shadow',
+                translateY: [16, 0],
+                opacity: [0, 1],
+                delay: anime.stagger(60),
+                duration: 420,
+                easing: 'easeOutCubic'
+            });
+        });
+
+        function renderCustomer(customer) {
+            const fullName = `${customer.firstName} ${customer.lastName}`;
+            const initials = `${(customer.firstName || ' ').charAt(0)}${(customer.lastName || ' ').charAt(0)}`.toUpperCase();
+
+            document.getElementById('customerName').textContent = fullName;
+            const editBtn = document.getElementById('editCustomerBtn');
+            if (editBtn) editBtn.href = `customers.html?edit=${encodeURIComponent(customer.id)}`;
+            document.getElementById('customerInitials').textContent = initials;
+            document.getElementById('customerSub').textContent = customer.createdAt ? `Customer since ${formatDate(customer.createdAt)}` : 'Customer';
+            document.getElementById('customerPhone').textContent = customer.phone || '—';
+            document.getElementById('customerEmail').textContent = customer.email || '—';
+            document.getElementById('totalVisits').textContent = customer.totalVisits || 0;
+            document.getElementById('totalSpent').textContent = `$${customer.totalSpent || 0}`;
+            document.getElementById('lastVisit').textContent = customer.lastVisit ? formatDate(customer.lastVisit) : '—';
+
+            const vehicle = [customer.vehicleYear, customer.vehicleMake, customer.vehicleModel].filter(Boolean).join(' ');
+            document.getElementById('vehicleLine').textContent = vehicle || 'No vehicle on file';
+            document.getElementById('vehicleLine2').textContent = customer.vehicleColor ? `Color: ${customer.vehicleColor}` : ' '; 
+
+            document.getElementById('btnCall').addEventListener('click', function() {
+                if (!customer.phone) return;
+                window.location.href = `tel:${customer.phone}`;
+            });
+
+            document.getElementById('btnCopy').addEventListener('click', async function() {
+                const text = `${fullName}\n${customer.phone || ''}${customer.email ? `\n${customer.email}` : ''}`.trim();
+                try {
+                    await navigator.clipboard.writeText(text);
+                    showNotification('Copied to clipboard', 'success');
+                } catch {
+                    showNotification('Copy failed (browser blocked clipboard)', 'error');
+                }
+            });
+
+            // Book link pre-fills the search name
+            document.getElementById('btnBook').href = `appointments.html#book?customer=${encodeURIComponent(fullName)}`;
+        }
+
+        function renderHistory(customer) {
+            const fullName = `${customer.firstName} ${customer.lastName}`.trim().toLowerCase();
+            const appointments = getAppointments()
+                .filter(a => (a.customer || '').toLowerCase().includes(fullName))
+                .sort((a, b) => {
+                    const dA = new Date(`${a.date}T${a.time || '00:00'}`);
+                    const dB = new Date(`${b.date}T${b.time || '00:00'}`);
+                    return dB - dA;
+                });
+
+            document.getElementById('historyCount').textContent = `${appointments.length} record${appointments.length === 1 ? '' : 's'}`;
+
+            const container = document.getElementById('historyList');
+            if (appointments.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-10">
+                        <i class="fas fa-clock-rotate-left text-4xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500">No service history yet.</p>
+                        <p class="text-sm text-gray-400 mt-1">Book an appointment to start tracking visits.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = appointments.map(a => `
+                <div class="p-4 hover:bg-gray-50 transition-colors">
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <p class="font-semibold text-gray-900">${getServiceName(a.service) || a.service || 'Service'}</p>
+                            <p class="text-sm text-gray-600">${formatDate(a.date)} • ${formatTime(a.time || '00:00')}</p>
+                            ${a.notes ? `<p class="text-sm text-gray-500 mt-2"><i class=\"fas fa-note-sticky mr-2\"></i>${escapeHtml(a.notes)}</p>` : ''}
+                        </div>
+                        <span class="px-2 py-1 text-xs rounded-full ${getStatusClass(a.status)}">${formatStatusLabel(a.status || 'scheduled')}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Notes storage per customer
+        function notesKey(customerId) {
+            return `customerNotes_${customerId}`;
+        }
+
+        function getNotes(customerId) {
+            return JSON.parse(localStorage.getItem(notesKey(customerId)) || '[]');
+        }
+
+        
+        function renderTimeline(customer){
+            const fullName = `${customer.firstName} ${customer.lastName}`.trim().toLowerCase();
+            const appts = (getAppointments ? getAppointments() : JSON.parse(localStorage.getItem('appointments')||'[]'))
+                .filter(a => (a.customer || '').toLowerCase().includes(fullName))
+                .map(a => {
+                    const dt = new Date(`${a.date}T${a.time || '00:00'}`);
+                    return {
+                        type: 'appointment',
+                        id: a.id,
+                        when: dt,
+                        title: a.service || 'Appointment',
+                        status: a.status || 'scheduled',
+                        meta: `${a.date}${a.time ? ' • ' + a.time : ''}`
+                    };
+                });
+
+            const invoices = (window.getInvoices ? window.getInvoices() : JSON.parse(localStorage.getItem('invoices')||'[]'))
+                .filter(i => (i.customer || '').toLowerCase().includes(fullName))
+                .map(i => {
+                    const dt = new Date(i.createdAt || Date.now());
+                    return {
+                        type: 'invoice',
+                        id: i.id,
+                        when: dt,
+                        title: `${i.invoiceNumber || 'Invoice'} • ${Number(i.amount||0).toLocaleString(undefined,{style:'currency',currency:'USD'})}`,
+                        status: i.status || 'unpaid',
+                        meta: i.appointmentId ? `Linked to appointment ${i.appointmentId}` : ''
+                    };
+                });
+
+            const events = [...appts, ...invoices].sort((a,b)=> b.when - a.when);
+
+            const countEl = document.getElementById('timelineCount');
+            if (countEl) countEl.textContent = `${events.length} item${events.length===1?'':'s'}`;
+
+            const list = document.getElementById('timelineList');
+            if (!list) return;
+
+            if (events.length === 0){
+                list.innerHTML = `
+                    <div class="text-center py-10">
+                        <i class="fas fa-stream text-4xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500">No timeline items yet.</p>
+                        <p class="text-sm text-gray-400 mt-1">Appointments and invoices will appear here automatically.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const icon = (t)=> t==='invoice' ? 'fa-file-invoice-dollar' : 'fa-calendar-check';
+            const badge = (e)=>{
+                if (e.type==='invoice'){
+                    return e.status==='paid'
+                        ? `<span class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">Paid</span>`
+                        : `<span class="text-xs px-2 py-1 rounded-full bg-amber-100 text-amber-700">Unpaid</span>`;
+                }
+                // appointment
+                const s = String(e.status||'scheduled');
+                const map = {
+                    'scheduled': ['bg-amber-100','text-amber-800','Scheduled'],
+                    'confirmed': ['bg-purple-100','text-purple-800','Confirmed'],
+                    'in-progress': ['bg-blue-100','text-blue-800','In Progress'],
+                    'completed': ['bg-green-100','text-green-800','Completed'],
+                    'no-show': ['bg-red-100','text-red-800','No Show'],
+                    'canceled': ['bg-gray-100','text-gray-700','Canceled']
+                };
+                const [bg,tx,label] = map[s] || map['scheduled'];
+                return `<span class="text-xs px-2 py-1 rounded-full ${bg} ${tx}">${label}</span>`;
+            };
+
+            list.innerHTML = events.map(e => {
+                const link = e.type==='invoice'
+                    ? `invoices.html#invoice=${encodeURIComponent(e.id)}`
+                    : `appointments.html#appointment=${encodeURIComponent(e.id)}`;
+                return `
+                    <a href="${link}" class="block p-4 rounded-2xl border border-gray-200 hover:bg-gray-50 transition">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <i class="fas ${icon(e.type)} text-gray-500"></i>
+                                    <p class="font-semibold text-gray-900 truncate">${e.title}</p>
+                                </div>
+                                <p class="text-sm text-gray-500 mt-1">${e.meta || ''}</p>
+                            </div>
+                            <div class="shrink-0">
+                                ${badge(e)}
+                            </div>
+                        </div>
+                    </a>
+                `;
+            }).join('');
+        }
+
+function addNote(customerId, text) {
+            const notes = getNotes(customerId);
+            notes.unshift({ id: generateId(), text, createdAt: new Date().toISOString() });
+            localStorage.setItem(notesKey(customerId), JSON.stringify(notes));
+        }
+
+        function deleteNote(customerId, noteId) {
+            const notes = getNotes(customerId).filter(n => n.id !== noteId);
+            localStorage.setItem(notesKey(customerId), JSON.stringify(notes));
+            renderNotes(customerId);
+            showNotification('Note deleted', 'success');
+        }
+
+        function renderNotes(customerId) {
+            const notes = getNotes(customerId);
+            const container = document.getElementById('notesList');
+            if (notes.length === 0) {
+                container.innerHTML = `<p class="text-sm text-gray-500">No notes yet.</p>`;
+                return;
+            }
+
+            container.innerHTML = notes.map(n => `
+                <div class="p-3 rounded-xl border border-gray-200 bg-gray-50">
+                    <div class="flex items-start justify-between gap-3">
+                        <div>
+                            <p class="text-sm text-gray-900">${escapeHtml(n.text)}</p>
+                            <p class="text-xs text-gray-500 mt-1">${formatDateTime(n.createdAt)}</p>
+                        </div>
+                        <button onclick="deleteNote('${customerId}','${n.id}')" class="text-gray-400 hover:text-red-600" title="Delete note">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Helpers (local storage)
+        function getAppointments() {
+            return JSON.parse(localStorage.getItem('appointments') || '[]');
+        }
+
+        function getCustomers() {
+            return JSON.parse(localStorage.getItem('customers') || '[]');
+        }
+
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        function formatDate(dateStr) {
+            const d = new Date(dateStr);
+            if (isNaN(d)) return dateStr;
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function formatTime(timeStr) {
+            // expects HH:MM
+            if (!timeStr || !timeStr.includes(':')) return timeStr || '';
+            const [h, m] = timeStr.split(':').map(Number);
+            const dt = new Date();
+            dt.setHours(h, m, 0, 0);
+            return dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+        }
+
+        function formatDateTime(dateStr) {
+            const d = new Date(dateStr);
+            if (isNaN(d)) return dateStr;
+            return d.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+        }
+
+        function getServiceName(serviceId) {
+            const services = JSON.parse(localStorage.getItem('services') || '[]');
+            const svc = (services || []).find(s => String(s.id) === String(serviceId));
+            if (svc && svc.name) return svc.name;
+
+            // Legacy fallback
+            const legacy = {
+                'basic': 'Basic Detail',
+                'premium': 'Premium Detail',
+                'ultimate': 'Ultimate Detail',
+                'ceramic': 'Ceramic Coating',
+                'interior': 'Interior Only',
+                'exterior': 'Exterior Only',
+                'basic-wash': 'Basic Wash',
+                'full-detail': 'Full Detail',
+                'interior-detail': 'Interior Detail',
+                'exterior-detail': 'Exterior Detail',
+                'ceramic-coating': 'Ceramic Coating'
+            };
+            return legacy[serviceId] || serviceId;
+        }
+
+        function formatStatusLabel(status) {
+            const labels = {
+                'new-lead': 'New Lead',
+                'scheduled': 'Scheduled',
+                'in-progress': 'In Progress',
+                'completed': 'Completed',
+                'paid': 'Paid'
+            };
+            return labels[status] || status;
+        }
+
+        function getStatusClass(status) {
+            const s = status || 'scheduled';
+            const map = {
+                'new-lead': 'bg-gray-100 text-gray-700',
+                'scheduled': 'bg-blue-100 text-blue-700',
+                'in-progress': 'bg-yellow-100 text-yellow-800',
+                'completed': 'bg-emerald-100 text-emerald-800',
+                'paid': 'bg-purple-100 text-purple-800'
+            };
+            return map[s] || 'bg-gray-100 text-gray-700';
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm ${
+                type === 'success' ? 'bg-emerald-500 text-white' :
+                type === 'error' ? 'bg-red-500 text-white' :
+                'bg-blue-500 text-white'
+            }`;
+            notification.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <i class="fas ${
+                        type === 'success' ? 'fa-check-circle' :
+                        type === 'error' ? 'fa-exclamation-circle' :
+                        'fa-info-circle'
+                    }"></i>
+                    <span>${escapeHtml(message)}</span>
+                </div>
+            `;
+            document.body.appendChild(notification);
+
+            anime({
+                targets: notification,
+                translateX: [300, 0],
+                opacity: [0, 1],
+                duration: 300,
+                easing: 'easeOutCubic'
+            });
+
+            setTimeout(() => {
+                anime({
+                    targets: notification,
+                    translateX: [0, 300],
+                    opacity: [1, 0],
+                    duration: 300,
+                    easing: 'easeInCubic',
+                    complete: () => notification.remove()
+                });
+            }, 2500);
+        }
+
+        function handleArchiveCustomer() {
+            const customerId = (new URLSearchParams(window.location.search)).get('id');
+            if (!customerId) { showNotification('Customer not found', 'error'); return; }
+            if (window.ButtonHandlers && typeof ButtonHandlers.deleteCustomer === 'function') {
+                ButtonHandlers.deleteCustomer(customerId);
+                setTimeout(() => { window.location.href = 'customers.html'; }, 300);
+            }
+        }
+
+        function handlePermanentDeleteCustomer() {
+            const customerId = (new URLSearchParams(window.location.search)).get('id');
+            if (!customerId) { showNotification('Customer not found', 'error'); return; }
+            if (window.ButtonHandlers && typeof ButtonHandlers.permanentDeleteCustomer === 'function') {
+                ButtonHandlers.permanentDeleteCustomer(customerId);
+                setTimeout(() => { window.location.href = 'customers.html'; }, 300);
+            }
+        }
+</script>
+</body>
+</html>

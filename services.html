@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DetailPro CRM - Services & Pricing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .font-display { font-family: 'Playfair Display', serif; }
+        .font-body { font-family: 'Inter', sans-serif; }
+        .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .btn-primary { background: linear-gradient(135deg, #3b82f6, #1e40af); }
+        .btn-accent { background: linear-gradient(135deg, #f97316, #ea580c); }
+        .text-primary { color: #1e293b; }
+        .text-accent { color: #f97316; }
+        .bg-primary { background-color: #1e293b; }
+        .bg-accent { background-color: #f97316; }
+        .nav-bottom { bottom: 0; left: 0; right: 0; z-index: 50; }
+        .content-padding { padding-bottom: 80px; }
+        .service-card { transition: all 0.3s ease; }
+        .service-card:hover { transform: translateY(-4px); }
+        .price-tag { background: linear-gradient(135deg, #10b981, #059669); }
+    </style>
+</head>
+<body class="bg-gray-50 font-body">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 p-4">
+        <div class="flex items-center justify-between max-w-6xl mx-auto">
+            <div class="flex items-center space-x-3">
+                <img src="resources/logo.png" alt="DetailPro" class="w-8 h-8">
+                <h1 class="font-display text-xl font-bold text-primary">Services & Pricing</h1>
+            </div>
+            <button onclick="openModal('addServiceModal')" class="btn-accent text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">
+                <i class="fas fa-plus mr-2"></i>Add Service
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto p-4 content-padding">
+        <!-- Service Categories -->
+        <section class="mb-6">
+            <div class="flex flex-wrap gap-2">
+                <button onclick="filterServices('all')" class="category-filter active px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+                    All Services
+                </button>
+                <button onclick="filterServices('basic')" class="category-filter px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition-colors">
+                    Basic Detailing
+                </button>
+                <button onclick="filterServices('premium')" class="category-filter px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition-colors">
+                    Premium Services
+                </button>
+                <button onclick="filterServices('specialty')" class="category-filter px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300 transition-colors">
+                    Specialty Services
+                </button>
+            </div>
+        </section>
+
+        <!-- Service Packages -->
+        <section class="mb-6">
+            <h2 class="font-display text-2xl font-bold text-primary mb-4">Service Packages</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="servicePackages">
+                <!-- Service packages will be populated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Add-on Services -->
+        <section class="mb-16">
+            <h2 class="font-display text-2xl font-bold text-primary mb-4">Add-on Services</h2>
+            <div class="bg-white rounded-xl card-shadow border border-gray-100 overflow-hidden">
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="addonServices">
+                        <!-- Add-on services will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed nav-bottom bg-white border-t border-gray-200 p-4">
+        <div class="flex justify-around max-w-md mx-auto">
+            <a href="index.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-home text-xl mb-1"></i>
+                <span class="text-xs">Dashboard</span>
+            </a>
+            <a href="customers.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-users text-xl mb-1"></i>
+                <span class="text-xs">Customers</span>
+            </a>
+            <a href="appointments.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-calendar text-xl mb-1"></i>
+                <span class="text-xs">Invoices</span>
+            </a>
+<a href="invoices.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-file-invoice-dollar text-xl mb-1"></i>
+                <span class="text-xs">Invoices</span>
+            </a>
+            <a href="services.html" class="flex flex-col items-center text-blue-600">
+                <i class="fas fa-concierge-bell text-xl mb-1"></i>
+                <span class="text-xs">Services</span>
+            </a>
+            <a href="notifications.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-bell text-xl mb-1"></i>
+                <span class="text-xs">Alerts</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Add Service Modal -->
+    <div id="addServiceModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-md w-full max-h-screen overflow-y-auto">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-display text-xl font-bold">Add New Service</h3>
+                    <button onclick="closeModal('addServiceModal')" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="serviceForm">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Service Name *</label>
+                            <input type="text" id="serviceName" required 
+                                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Category *</label>
+                            <select id="serviceCategory" required 
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">Select category...</option>
+                                <option value="basic">Basic Detailing</option>
+                                <option value="premium">Premium Services</option>
+                                <option value="specialty">Specialty Services</option>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Price *</label>
+                                <input type="number" id="servicePrice" required min="0" step="0.01" 
+                                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Duration (hours)</label>
+                                <input type="number" id="serviceDuration" min="0.5" step="0.5" 
+                                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <textarea id="serviceDescription" rows="3" 
+                                      class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" id="serviceActive" checked 
+                                   class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <label for="serviceActive" class="text-sm text-gray-700">Active service</label>
+                        </div>
+                    </div>
+                    <div class="flex space-x-3 mt-6">
+                        <button type="button" onclick="closeModal('addServiceModal')" 
+                                class="flex-1 py-3 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                                class="flex-1 py-3 px-4 btn-accent text-white rounded-lg hover:opacity-90 transition-opacity">
+                            Add Service
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+  <script src="api-client.js"></script>
+  <script src="main-enhanced.js"></script>
+    <script>
+        // Services and pricing management
+        document.addEventListener('DOMContentLoaded', function() {
+            loadServices();
+            setupServiceEventListeners();
+            animateServiceElements();
+        });
+
+        // Sample service data
+        const sampleServices = [
+            {
+                id: '1',
+                name: 'Basic Detail',
+                category: 'basic',
+                price: 80,
+                duration: 2.5,
+                description: 'Complete exterior wash, interior vacuum, window cleaning, and tire shine. Perfect for regular maintenance.',
+                features: ['Exterior hand wash', 'Interior vacuum', 'Window cleaning', 'Tire shine', 'Dashboard wipe down'],
+                active: true,
+                popular: false
+            },
+            {
+                id: '2',
+                name: 'Premium Detail',
+                category: 'premium',
+                price: 150,
+                duration: 4,
+                description: 'Comprehensive detailing including wax, interior deep clean, and paint protection. Our most popular service.',
+                features: ['Everything in Basic', 'Premium wax application', 'Interior deep clean', 'Leather conditioning', 'Paint sealant'],
+                active: true,
+                popular: true
+            },
+            {
+                id: '3',
+                name: 'Ultimate Detail',
+                category: 'premium',
+                price: 250,
+                duration: 6,
+                description: 'Luxury detailing with premium products and extended services for the ultimate finish.',
+                features: ['Everything in Premium', 'Clay bar treatment', 'Machine polishing', 'Engine bay cleaning', 'Ceramic spray coating'],
+                active: true,
+                popular: false
+            },
+            {
+                id: '4',
+                name: 'Ceramic Coating',
+                category: 'specialty',
+                price: 500,
+                duration: 8,
+                description: 'Professional-grade ceramic coating for long-lasting protection and shine.',
+                features: ['Paint correction', 'Surface decontamination', 'Ceramic coating application', '24-hour cure time', '2-year warranty'],
+                active: true,
+                popular: false
+            },
+            {
+                id: '5',
+                name: 'Interior Only',
+                category: 'basic',
+                price: 60,
+                duration: 1.5,
+                description: 'Focused interior cleaning and detailing for a fresh cabin.',
+                features: ['Deep vacuum', 'Steam cleaning', 'Leather treatment', 'Odor elimination', 'Dashboard conditioning'],
+                active: true,
+                popular: false
+            },
+            {
+                id: '6',
+                name: 'Exterior Only',
+                category: 'basic',
+                price: 50,
+                duration: 1.5,
+                description: 'Complete exterior care for a brilliant shine and protection.',
+                features: ['Hand wash & dry', 'Wax application', 'Wheel cleaning', 'Tire dressing', 'Glass treatment'],
+                active: true,
+                popular: false
+            }
+        ];
+
+        const sampleAddons = [
+            { id: '1', name: 'Premium Wax', price: 25, duration: 0.5 },
+            { id: '2', name: 'Tire Shine', price: 15, duration: 0.25 },
+            { id: '3', name: 'Engine Clean', price: 35, duration: 0.75 },
+            { id: '4', name: 'Pet Hair Removal', price: 20, duration: 0.5 },
+            { id: '5', name: 'Headlight Restoration', price: 45, duration: 1 },
+            { id: '6', name: 'Odor Removal', price: 30, duration: 0.5 },
+            { id: '7', name: 'Clay Bar Treatment', price: 40, duration: 1 },
+            { id: '8', name: 'Leather Conditioning', price: 25, duration: 0.5 }
+        ];
+
+        function loadServices() {
+            const services = getServices();
+            const addons = getAddons();
+            
+            displayServicePackages(services);
+            displayAddonServices(addons);
+        }
+
+        function displayServicePackages(services) {
+            const container = document.getElementById('servicePackages');
+            
+            container.innerHTML = services.map(service => `
+                <div class="service-card bg-white rounded-xl card-shadow border border-gray-100 overflow-hidden ${service.popular ? 'ring-2 ring-blue-500' : ''}">
+                    ${service.popular ? '<div class="bg-blue-500 text-white text-xs font-bold px-3 py-1 text-center">MOST POPULAR</div>' : ''}
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-display text-xl font-bold text-primary">${service.name}</h3>
+                            <div class="price-tag text-white px-3 py-1 rounded-full text-sm font-bold">
+                                $${service.price}
+                            </div>
+                        </div>
+                        
+                        <p class="text-gray-600 mb-4 text-sm leading-relaxed">${service.description}</p>
+                        
+                        <div class="mb-4">
+                            <div class="flex items-center text-sm text-gray-500 mb-2">
+                                <i class="fas fa-clock mr-2"></i>
+                                ${service.duration} hours
+                            </div>
+                            <div class="flex items-center text-sm text-gray-500">
+                                <i class="fas fa-car mr-2"></i>
+                                ${getCategoryName(service.category)}
+                            </div>
+                        </div>
+                        
+                        <ul class="space-y-2 mb-6">
+                            ${service.features.map(feature => `
+                                <li class="flex items-start space-x-2 text-sm text-gray-700">
+                                    <i class="fas fa-check text-green-500 mt-0.5 flex-shrink-0"></i>
+                                    <span>${feature}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                        
+                        <div class="flex space-x-2">
+                            <button onclick="editService('${service.id}')" 
+                                    class="flex-1 py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm">
+                                <i class="fas fa-edit mr-2"></i>Edit
+                            </button>
+                            <button onclick="bookService('${service.id}')" 
+                                    class="flex-1 py-2 px-4 btn-accent text-white rounded-lg hover:opacity-90 transition-opacity text-sm">
+                                <i class="fas fa-calendar-plus mr-2"></i>Book Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function displayAddonServices(addons) {
+            const container = document.getElementById('addonServices');
+            
+            container.innerHTML = addons.map(addon => `
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors">
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="font-semibold text-gray-900">${addon.name}</h4>
+                        <span class="text-sm font-bold text-green-600">+$${addon.price}</span>
+                    </div>
+                    <div class="flex items-center text-xs text-gray-500">
+                        <i class="fas fa-clock mr-1"></i>
+                        ${addon.duration}h
+                    </div>
+                    <div class="mt-3 flex space-x-2">
+                        <button onclick="editAddon('${addon.id}')" 
+                                class="text-xs px-3 py-1 border border-gray-300 rounded text-gray-600 hover:bg-white transition-colors">
+                            Edit
+                        </button>
+                        <button onclick="toggleAddon('${addon.id}')" 
+                                class="text-xs px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                            ${addon.active ? 'Active' : 'Inactive'}
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+
+
+        function filterServices(category) {
+            // Update active filter button
+            document.querySelectorAll('.category-filter').forEach(btn => {
+                btn.classList.remove('active', 'bg-blue-600', 'text-white');
+                btn.classList.add('bg-gray-200', 'text-gray-700');
+            });
+            
+            const clickedButton = event.target;
+            clickedButton.classList.remove('bg-gray-200', 'text-gray-700');
+            clickedButton.classList.add('active', 'bg-blue-600', 'text-white');
+            
+            // Filter services
+            const services = getServices();
+            const filtered = category === 'all' ? services : services.filter(s => s.category === category);
+            displayServicePackages(filtered);
+            
+            animateServiceElements();
+        }
+
+        function setupServiceEventListeners() {
+            const serviceForm = document.getElementById('serviceForm');
+            if (serviceForm) {
+                serviceForm.addEventListener('submit', handleServiceSubmission);
+            }
+        }
+
+        function handleServiceSubmission(e) {
+            e.preventDefault();
+            
+            const serviceData = {
+                id: generateId(),
+                name: document.getElementById('serviceName').value,
+                category: document.getElementById('serviceCategory').value,
+                price: parseFloat(document.getElementById('servicePrice').value),
+                duration: parseFloat(document.getElementById('serviceDuration').value) || 1,
+                description: document.getElementById('serviceDescription').value,
+                features: [], // Would be populated from a features input
+                active: document.getElementById('serviceActive').checked,
+                popular: false
+            };
+
+            // Validate required fields
+            if (!serviceData.name || !serviceData.category || !serviceData.price) {
+                showNotification('Please fill in all required fields', 'error');
+                return;
+            }
+
+            // Validate price is positive
+            if (serviceData.price <= 0) {
+                showNotification('Price must be greater than 0', 'error');
+                return;
+            }
+
+            saveService(serviceData);
+            closeModal('addServiceModal');
+            loadServices();
+            showNotification('Service added successfully!', 'success');
+            e.target.reset();
+        }
+
+        function editService(serviceId) {
+            // In a full implementation, this would open an edit modal
+            showNotification('Edit service functionality coming soon!', 'info');
+        }
+
+        function editAddon(addonId) {
+            // In a full implementation, this would open an edit modal
+            showNotification('Edit addon functionality coming soon!', 'info');
+        }
+
+        function toggleAddon(addonId) {
+            const addons = getAddons();
+            const addon = addons.find(a => a.id === addonId);
+            if (addon) {
+                addon.active = !addon.active;
+                localStorage.setItem('addons', JSON.stringify(addons));
+                displayAddonServices(addons);
+                showNotification(`Addon ${addon.active ? 'activated' : 'deactivated'}`, 'success');
+            }
+        }
+
+        function bookService(serviceId) {
+            localStorage.setItem('selectedServiceId', serviceId);
+            window.location.href = 'appointments.html';
+        }
+
+        function animateServiceElements() {
+            anime({
+                targets: '.service-card',
+                translateY: [30, 0],
+                opacity: [0, 1],
+                delay: anime.stagger(100),
+                duration: 600,
+                easing: 'easeOutCubic'
+            });
+        }
+
+        // Data management functions
+        function getServices() {
+            const services = JSON.parse(localStorage.getItem('services') || '[]');
+            return services.length > 0 ? services : sampleServices;
+        }
+
+        function getAddons() {
+            const addons = JSON.parse(localStorage.getItem('addons') || '[]');
+            return addons.length > 0 ? addons : sampleAddons;
+        }
+
+        function saveService(service) {
+            const services = getServices();
+            services.push(service);
+            localStorage.setItem('services', JSON.stringify(services));
+        }
+
+        function getCategoryName(category) {
+            const categoryNames = {
+                'basic': 'Basic Detailing',
+                'premium': 'Premium Services',
+                'specialty': 'Specialty Services'
+            };
+            return categoryNames[category] || category;
+        }
+
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm ${
+                type === 'success' ? 'bg-emerald-500 text-white' : 
+                type === 'error' ? 'bg-red-500 text-white' : 
+                'bg-blue-500 text-white'
+            }`;
+            notification.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <i class="fas ${
+                        type === 'success' ? 'fa-check-circle' :
+                        type === 'error' ? 'fa-exclamation-circle' :
+                        'fa-info-circle'
+                    }"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+
+            document.body.appendChild(notification);
+
+            anime({
+                targets: notification,
+                translateX: [300, 0],
+                opacity: [0, 1],
+                duration: 300,
+                easing: 'easeOutCubic'
+            });
+
+            setTimeout(() => {
+                anime({
+                    targets: notification,
+                    translateX: [0, 300],
+                    opacity: [1, 0],
+                    duration: 300,
+                    easing: 'easeInCubic',
+                    complete: () => {
+                        document.body.removeChild(notification);
+                    }
+                });
+            }, 3000);
+        }
+
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+                
+                anime({
+                    targets: modal.querySelector('.bg-white'),
+                    scale: [0.8, 1],
+                    opacity: [0, 1],
+                    duration: 300,
+                    easing: 'easeOutCubic'
+                });
+            }
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                anime({
+                    targets: modal.querySelector('.bg-white'),
+                    scale: [1, 0.8],
+                    opacity: [1, 0],
+                    duration: 200,
+                    easing: 'easeInCubic',
+                    complete: function() {
+                        modal.classList.add('hidden');
+                        document.body.style.overflow = 'auto';
+                    }
+                });
+            }
+        }
+
+        // Check for selected service from other pages
+        function checkSelectedService() {
+            const selectedServiceId = localStorage.getItem('selectedServiceId');
+            if (selectedServiceId) {
+                const services = getServices();
+                const service = services.find(s => s.id === selectedServiceId);
+                if (service) {
+                    // Highlight the selected service
+                    showNotification(`${service.name} selected for booking`, 'info');
+                }
+                localStorage.removeItem('selectedServiceId');
+            }
+        }
+
+        // Initialize selected service check
+        setTimeout(checkSelectedService, 100);
+    </script>
+</body>
+</html>

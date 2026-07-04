@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DetailPro CRM - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .font-display { font-family: 'Playfair Display', serif; }
+        .font-body { font-family: 'Inter', sans-serif; }
+        .bg-pattern { background-image: url('resources/dashboard-bg.png'); background-size: cover; background-position: center; }
+        .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .btn-primary { background: linear-gradient(135deg, #3b82f6, #1e40af); }
+        .btn-accent { background: linear-gradient(135deg, #f97316, #ea580c); }
+        .text-primary { color: #1e293b; }
+        .text-accent { color: #f97316; }
+        .bg-primary { background-color: #1e293b; }
+        .bg-accent { background-color: #f97316; }
+        .status-pending { background-color: #fef3c7; color: #92400e; }
+        .status-progress { background-color: #dbeafe; color: #1e40af; }
+        .status-new-lead { background-color: #ede9fe; color: #5b21b6; }
+        .status-scheduled { background-color: #fef3c7; color: #92400e; }
+        .status-progress { background-color: #dbeafe; color: #1e40af; }
+        .status-completed { background-color: #d1fae5; color: #065f46; }
+        .status-paid { background-color: #cffafe; color: #155e75; }
+        .nav-bottom { bottom: 0; left: 0; right: 0; z-index: 50; }
+        .content-padding { padding-bottom: 80px; }
+    </style>
+</head>
+<body class="bg-white font-body">
+    <!-- Header -->
+    <header class="bg-pattern bg-primary text-white p-4">
+        <div class="flex items-center justify-between max-w-6xl mx-auto">
+            <div class="flex items-center space-x-3">
+                <img src="resources/logo.png" alt="DetailPro" class="w-10 h-10">
+                <div>
+                    <h1 class="font-display text-xl font-bold">DetailPro CRM</h1>
+                    <p class="text-sm opacity-90" id="currentDate"></p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button class="p-2 rounded-lg bg-white bg-opacity-20 hover:bg-opacity-30 transition-all">
+                    <i class="fas fa-bell"></i>
+                </button>
+                <button onclick="window.location.href='settings.html'" class="p-2 rounded-lg bg-white bg-opacity-20 hover:bg-opacity-30 transition-all">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto p-4 content-padding">
+
+        <!-- Today's Overview -->
+        <section class="mb-6">
+            <h2 class="font-display text-2xl font-bold text-primary mb-4">Today's Overview</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Revenue Card -->
+                <div class="bg-white p-6 rounded-xl card-shadow border border-gray-100">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-medium text-gray-600">Expected Today</h3>
+                        <i class="fas fa-dollar-sign text-emerald-600"></i>
+                    </div>
+                    <p class="text-2xl font-bold text-primary" id="todayRevenue">$1,240</p>
+                    <p class="text-sm text-emerald-600" id="todayRevenueSub">Based on today's jobs</p>
+                </div>
+                
+                <!-- Appointments Card -->
+                <div class="bg-white p-6 rounded-xl card-shadow border border-gray-100">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-medium text-gray-600">Appointments</h3>
+                        <i class="fas fa-calendar-check text-blue-600"></i>
+                    </div>
+                    <p class="text-2xl font-bold text-primary" id="todayAppointments">8</p>
+                    <p class="text-sm text-blue-600" id="todayAppointmentsSub"></p>
+                </div>
+                
+                <!-- Active Jobs Card -->
+                <div class="bg-white p-6 rounded-xl card-shadow border border-gray-100">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-medium text-gray-600">Active Jobs</h3>
+                        <i class="fas fa-tools text-orange-600"></i>
+                    </div>
+                    <p class="text-2xl font-bold text-primary" id="activeJobs">4</p>
+                    <p class="text-sm text-orange-600" id="activeJobsSub"></p>
+                </div>
+            </div>
+        </section>
+
+<!-- Today's Scheduled Jobs -->
+        <section class="mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="font-display text-2xl font-bold text-primary">Today's Scheduled Jobs</h2>
+                <button onclick="window.location.href='appointments.html'" class="text-blue-600 hover:text-blue-800 font-medium">View All</button>
+            </div>
+            <div class="bg-white rounded-xl card-shadow border border-gray-100 overflow-hidden">
+                <div class="p-4 space-y-3" id="todaySchedule">
+                    <!-- Schedule items will be populated by JavaScript -->
+                </div>
+            </div>
+        </section>
+
+<!-- Business Analytics -->
+        <section class="mb-6">
+            <h2 class="font-display text-2xl font-bold text-primary mb-4">Weekly Analytics</h2>
+            <div class="bg-white p-6 rounded-xl card-shadow border border-gray-100">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+                    <div class="text-sm text-gray-600">
+                        Track jobs & revenue by week.
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Week</span>
+                        <select id="weekRangeSelect" class="p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"></select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+                    <div class="rounded-xl border border-gray-100 p-4">
+                        <div class="text-xs uppercase tracking-wide text-gray-500">Appointments</div>
+                        <div class="text-2xl font-bold text-primary" id="wkAppointments">0</div>
+                        <div class="text-xs text-gray-500" id="wkAppointmentsSub">—</div>
+                    </div>
+                    <div class="rounded-xl border border-gray-100 p-4">
+                        <div class="text-xs uppercase tracking-wide text-gray-500">Completed</div>
+                        <div class="text-2xl font-bold text-primary" id="wkCompleted">0</div>
+                        <div class="text-xs text-gray-500" id="wkCompletionRate">—</div>
+                    </div>
+                    <div class="rounded-xl border border-gray-100 p-4">
+                        <div class="text-xs uppercase tracking-wide text-gray-500">Invoiced</div>
+                        <div class="text-2xl font-bold text-primary" id="wkInvoiced">$0</div>
+                        <div class="text-xs text-gray-500" id="wkPaidSub">Paid: $0</div>
+                    </div>
+                    <div class="rounded-xl border border-gray-100 p-4">
+                        <div class="text-xs uppercase tracking-wide text-gray-500">Avg Ticket</div>
+                        <div class="text-2xl font-bold text-primary" id="wkAvgTicket">$0</div>
+                        <div class="text-xs text-gray-500" id="wkNewCustomers">New customers: 0</div>
+                    </div>
+                </div>
+
+                <div id="revenueChart" style="height: 320px;"></div>
+                <div class="mt-4 text-xs text-gray-500" id="wkChartHint"></div>
+            </div>
+        </section>
+
+</main>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed nav-bottom bg-white border-t border-gray-200 p-4">
+        <div class="flex justify-around max-w-md mx-auto">
+            <a href="index.html" class="flex flex-col items-center text-blue-600">
+                <i class="fas fa-home text-xl mb-1"></i>
+                <span class="text-xs">Dashboard</span>
+            </a>
+            <a href="customers.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-users text-xl mb-1"></i>
+                <span class="text-xs">Customers</span>
+            </a>
+            <a href="appointments.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-calendar text-xl mb-1"></i>
+                <span class="text-xs">Schedule</span>
+            </a>
+<a href="invoices.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-file-invoice-dollar text-xl mb-1"></i>
+                <span class="text-xs">Invoices</span>
+            </a>
+            <a href="services.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-concierge-bell text-xl mb-1"></i>
+                <span class="text-xs">Services</span>
+            </a>
+            <a href="notifications.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-bell text-xl mb-1"></i>
+                <span class="text-xs">Alerts</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Modals -->
+    <!-- New Appointment Modal -->
+    <div id="newAppointmentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-md w-full max-h-screen overflow-y-auto">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-display text-xl font-bold">New Appointment</h3>
+                    <button onclick="closeModal('newAppointmentModal')" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="appointmentForm">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Customer</label>
+                            <input type="text" id="customerSearch" placeholder="Search or add customer..." class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                                <input type="date" id="appointmentDate" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Time</label>
+                                <input type="time" id="appointmentTime" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Service</label>
+                            <select id="serviceSelect" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">Select a service...</option>
+                                <option value="basic">Basic Detail - $80</option>
+                                <option value="premium">Premium Detail - $150</option>
+                                <option value="ultimate">Ultimate Detail - $250</option>
+                                <option value="ceramic">Ceramic Coating - $500</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                            <textarea id="appointmentNotes" rows="3" placeholder="Special instructions..." class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                        </div>
+                    </div>
+                    <div class="flex space-x-3 mt-6">
+                        <button type="button" onclick="closeModal('newAppointmentModal')" class="flex-1 py-3 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" class="flex-1 py-3 px-4 btn-primary text-white rounded-lg hover:opacity-90 transition-opacity">
+                            Book Appointment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Customer Modal -->
+    <div id="newCustomerModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-md w-full max-h-screen overflow-y-auto">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-display text-xl font-bold">Add Customer</h3>
+                    <button onclick="closeModal('newCustomerModal')" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="customerForm">
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                                <input type="text" id="firstName" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                                <input type="text" id="lastName" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                            <input type="tel" id="phone" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <input type="email" id="email" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Vehicle Make</label>
+                            <input type="text" id="vehicleMake" placeholder="e.g., BMW, Mercedes, Audi" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Model</label>
+                                <input type="text" id="vehicleModel" placeholder="e.g., X5, C-Class" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Year</label>
+                                <input type="number" id="vehicleYear" placeholder="2023" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex space-x-3 mt-6">
+                        <button type="button" onclick="closeModal('newCustomerModal')" class="flex-1 py-3 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" class="flex-1 py-3 px-4 btn-accent text-white rounded-lg hover:opacity-90 transition-opacity">
+                            Add Customer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+    <script src="config.js"></script>
+  <script src="api-client.js"></script>
+  <script src="main-enhanced.js"></script>
+
+    <!-- Appointment Info Modal -->
+    <div id="appointmentInfoModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl w-full max-w-lg mx-4 card-shadow border border-gray-100">
+            <div class="p-5 border-b border-gray-100 flex items-center justify-between">
+                <h3 class="font-display text-xl font-bold text-primary">Appointment Details</h3>
+                <button onclick="closeAppointmentInfo()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+
+            <div class="p-5 space-y-4">
+                <div>
+                    <div class="text-xs uppercase tracking-wide text-gray-500">Customer</div>
+                    <div id="aptInfoCustomer" class="text-lg font-semibold text-gray-900">—</div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <div class="text-xs uppercase tracking-wide text-gray-500">When</div>
+                        <div id="aptInfoWhen" class="font-medium text-gray-900">—</div>
+                    </div>
+                    <div>
+                        <div class="text-xs uppercase tracking-wide text-gray-500">Status</div>
+                        <div id="aptInfoStatus" class="font-medium text-gray-900">—</div>
+                    </div>
+                    <div>
+                        <div class="text-xs uppercase tracking-wide text-gray-500">Service</div>
+                        <div id="aptInfoService" class="font-medium text-gray-900">—</div>
+                    </div>
+                    <div>
+                        <div class="text-xs uppercase tracking-wide text-gray-500">Vehicle</div>
+                        <div id="aptInfoVehicle" class="font-medium text-gray-900">—</div>
+                    </div>
+                    <div>
+                        <div class="text-xs uppercase tracking-wide text-gray-500">Phone</div>
+                        <div id="aptInfoPhone" class="font-medium text-gray-900">—</div>
+                    </div>
+                    <div>
+                        <div class="text-xs uppercase tracking-wide text-gray-500">Email</div>
+                        <div id="aptInfoEmail" class="font-medium text-gray-900">—</div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="text-xs uppercase tracking-wide text-gray-500">Notes</div>
+                    <div id="aptInfoNotes" class="text-gray-800 whitespace-pre-wrap">—</div>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <a id="aptInfoCallBtn" class="flex-1 text-center py-2 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors">Call</a>
+                    <a id="aptInfoEmailBtn" class="flex-1 text-center py-2 rounded-xl bg-gray-900 text-white font-semibold hover:bg-black transition-colors">Email</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

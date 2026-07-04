@@ -1,0 +1,2236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DetailPro CRM - Appointments</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .font-display { font-family: 'Playfair Display', serif; }
+        .font-body { font-family: 'Inter', sans-serif; }
+        .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .btn-primary { background: linear-gradient(135deg, #3b82f6, #1e40af); }
+        .btn-accent { background: linear-gradient(135deg, #f97316, #ea580c); }
+        .text-primary { color: #1e293b; }
+        .text-accent { color: #f97316; }
+        .bg-primary { background-color: #1e293b; }
+        .bg-accent { background-color: #f97316; }
+        .nav-bottom { bottom: 0; left: 0; right: 0; z-index: 50; }
+        .content-padding { padding-bottom: 80px; }
+        .calendar-day { transition: all 0.2s ease; }
+        .calendar-day:hover { background-color: #f3f4f6; }
+        .calendar-day.selected { background-color: #3b82f6; color: white; }
+        .calendar-day.has-appointment { background-color: #fef3c7; }
+        .time-slot { transition: all 0.2s ease; }
+        .time-slot:hover { background-color: #f3f4f6; }
+        .time-slot.selected { background-color: #3b82f6; color: white; }
+        .time-slot.unavailable { background-color: #fee2e2; color: #dc2626; cursor: not-allowed; }
+        .appointment-card { transition: all 0.3s ease; }
+        .appointment-card:hover { transform: translateY(-2px); }
+    
+        .status-new-lead { background-color: #ede9fe; color: #5b21b6; }
+        .status-scheduled { background-color: #fef3c7; color: #92400e; }
+        .status-progress { background-color: #dbeafe; color: #1e40af; }
+        .status-completed { background-color: #d1fae5; color: #065f46; }
+        .status-paid { background-color: #cffafe; color: #155e75; }
+
+    </style>
+</head>
+<body class="bg-gray-50 font-body">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 p-4">
+        <div class="flex items-center justify-between max-w-6xl mx-auto">
+            <div class="flex items-center space-x-3">
+                <img src="resources/logo.png" alt="DetailPro" class="w-8 h-8">
+                <h1 class="font-display text-xl font-bold text-primary">Appointment Scheduling</h1>
+            </div>
+            <button onclick="openNewAppointmentModal()" class="btn-accent text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">
+                <i class="fas fa-plus mr-2"></i>New Appointment
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto p-4 content-padding">
+        <!-- Calendar Navigation -->
+        <section class="mb-6">
+            <div class="bg-white p-4 rounded-xl card-shadow border border-gray-100">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-4">
+                        <button onclick="previousMonth()" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                            <i class="fas fa-chevron-left text-gray-600"></i>
+                        </button>
+                        <h2 class="font-display text-xl font-bold text-primary" id="currentMonth"></h2>
+                        <button onclick="nextMonth()" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                            <i class="fas fa-chevron-right text-gray-600"></i>
+                        </button>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="goToToday()" class="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors">
+                            Today
+                        </button>
+                        <select id="viewMode" onchange="changeViewMode()" class="px-3 py-1 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="month">Month View</option>
+                            <option value="week">Week View</option>
+                            <option value="day">Day View</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Calendar Grid -->
+        <section class="mb-6">
+            <div class="bg-white rounded-xl card-shadow border border-gray-100 overflow-hidden">
+                <!-- Calendar Header -->
+                <div class="grid grid-cols-7 bg-gray-50 border-b border-gray-200">
+                    <div class="p-3 text-center text-sm font-medium text-gray-700">Sun</div>
+                    <div class="p-3 text-center text-sm font-medium text-gray-700">Mon</div>
+                    <div class="p-3 text-center text-sm font-medium text-gray-700">Tue</div>
+                    <div class="p-3 text-center text-sm font-medium text-gray-700">Wed</div>
+                    <div class="p-3 text-center text-sm font-medium text-gray-700">Thu</div>
+                    <div class="p-3 text-center text-sm font-medium text-gray-700">Fri</div>
+                    <div class="p-3 text-center text-sm font-medium text-gray-700">Sat</div>
+                </div>
+                <!-- Calendar Body -->
+                <div id="calendarGrid" class="grid grid-cols-7">
+                    <!-- Calendar days will be populated by JavaScript -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Today's Appointments -->
+        <section class="mb-6">
+            <div class="bg-white rounded-xl card-shadow border border-gray-100">
+                <div class="p-4 border-b border-gray-200">
+                    <h3 class="font-display text-lg font-bold text-primary" id="selectedDateTitle">Today's Appointments</h3>
+                </div>
+                <div id="dailyAppointments" class="divide-y divide-gray-200">
+                    <!-- Daily appointments will be populated by JavaScript -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Stats -->
+        <section class="mb-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-xl card-shadow border border-gray-100">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-medium text-gray-600">Today</h3>
+                        <i class="fas fa-calendar-day text-blue-600"></i>
+                    </div>
+                    <p class="text-2xl font-bold text-primary" id="todayCount">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl card-shadow border border-gray-100">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-medium text-gray-600">This Week</h3>
+                        <i class="fas fa-calendar-week text-green-600"></i>
+                    </div>
+                    <p class="text-2xl font-bold text-primary" id="weekCount">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl card-shadow border border-gray-100">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-medium text-gray-600">In Progress</h3>
+                        <i class="fas fa-clock text-orange-600"></i>
+                    </div>
+                    <p class="text-2xl font-bold text-primary" id="inProgressCount">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl card-shadow border border-gray-100">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-medium text-gray-600">Paid</h3>
+                        <i class="fas fa-check-circle text-emerald-600"></i>
+                    </div>
+                    <p class="text-2xl font-bold text-primary" id="paidCount">0</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed nav-bottom bg-white border-t border-gray-200 p-4">
+        <div class="flex justify-around max-w-md mx-auto">
+            <a href="index.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-home text-xl mb-1"></i>
+                <span class="text-xs">Dashboard</span>
+            </a>
+            <a href="customers.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-users text-xl mb-1"></i>
+                <span class="text-xs">Customers</span>
+            </a>
+            <a href="appointments.html" class="flex flex-col items-center text-blue-600">
+                <i class="fas fa-calendar text-xl mb-1"></i>
+                <span class="text-xs">Schedule</span>
+            </a>
+<a href="invoices.html" class="flex flex-col items-center text-blue-600">
+                <i class="fas fa-file-invoice-dollar text-xl mb-1"></i>
+                <span class="text-xs">Invoices</span>
+            </a>
+            <a href="services.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-concierge-bell text-xl mb-1"></i>
+                <span class="text-xs">Services</span>
+            </a>
+            <a href="notifications.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-bell text-xl mb-1"></i>
+                <span class="text-xs">Alerts</span>
+            </a>
+        </div>
+    </nav>
+
+    
+    <!-- Day Appointments Modal -->
+    <div id="dayAppointmentsModal" class="fixed inset-0 bg-black/50 z-50 hidden overflow-y-auto">
+        <div class="min-h-screen flex items-end sm:items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-md">
+                <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-gray-900" id="dayAppointmentsTitle">Appointments</h3>
+                    <button onclick="closeModal('dayAppointmentsModal')" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <div id="dayAppointmentsList" class="space-y-3"></div>
+                    <div id="dayNoAppointments" class="hidden text-sm text-gray-600">
+                        No appointments for this date.
+                    </div>
+	                    <div class="mt-6 flex justify-end gap-3" id="dayAppointmentsFooter">
+	                        <!-- View-only: creating appointments is done from the main "New Appointment" flow, not from the calendar day modal -->
+	                        <button onclick="closeModal('dayAppointmentsModal')" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-3 rounded-xl font-medium">
+	                            Close
+	                        </button>
+	                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!-- New Appointment Modal -->
+    <div id="newAppointmentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-2xl w-full max-h-screen overflow-y-auto">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-display text-xl font-bold">New Appointment</h3>
+                    <button onclick="closeModal('newAppointmentModal')" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <form id="appointmentForm">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Customer Selection -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Customer *</label>
+                            <div class="relative">
+                                <input type="text" id="customerSearch" placeholder="Search or add customer..." 
+                                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                                <div id="customerSuggestions" class="absolute z-10 w-full bg-white border border-gray-300 rounded-lg mt-1 hidden max-h-48 overflow-y-auto">
+                                    <!-- Customer suggestions will be populated here -->
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <button type="button" onclick="openModal('quickCustomerModal')" class="text-sm text-blue-600 hover:text-blue-800">
+                                    <i class="fas fa-plus mr-1"></i>Add New Customer
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Date Selection -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Date *</label>
+                            <input type="date" id="appointmentDate" required 
+                                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+
+                        <!-- Time Selection -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Time *</label>
+                            <select id="appointmentTime" required 
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">Select time slot...</option>
+                                <!-- Time slots will be populated by JavaScript -->
+                            </select>
+                        </div>
+
+                        <!-- Service Selection -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Service *</label>
+                            <select id="serviceSelect" required 
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">Select a service...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Add-ons -->
+                    <div class="mt-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-3">Add-ons</label>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            <div id="addonOptions" class="contents"></div>
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="mt-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Special Instructions</label>
+                        <textarea id="appointmentNotes" rows="3" placeholder="Any special requirements or notes..." 
+                                  class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                    </div>
+
+                    <!-- Automated Email Reminder (Pro) -->
+                    <div class="mt-6 border border-gray-200 rounded-lg p-4">
+                        <div class="flex items-start justify-between gap-4">
+                            <div>
+                                <h4 class="font-semibold text-gray-900">Automated Email Reminder</h4>
+                                <p class="text-sm text-gray-600 mt-1">Send an automatic email reminder to reduce no-shows. (Pro)</p>
+                                <p class="text-xs text-gray-500 mt-2">To actually send emails, run the included Email Server (server/server.js). Otherwise reminders will queue in the outbox.</p>
+                            </div>
+                            <label class="inline-flex items-center gap-2 select-none">
+                                <input id="reminderEnabled" type="checkbox" class="h-4 w-4 rounded border-gray-300">
+                                <span class="text-sm font-medium text-gray-800">Enable</span>
+                            </label>
+                        </div>
+
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            <button id="btnTestReminderEmail" type="button" class="px-3 py-2 text-xs font-semibold rounded-lg border border-gray-300 hover:bg-gray-50">Send test email</button>
+                            <button id="btnSetEmailServerUrl" type="button" class="px-3 py-2 text-xs font-semibold rounded-lg border border-gray-300 hover:bg-gray-50">Email server URL</button>
+                        </div>
+
+                        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Send reminder</label>
+                                <select id="reminderOffsetHours" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="24">24 hours before</option>
+                                    <option value="48">48 hours before</option>
+                                    <option value="72">72 hours before</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Recipient</label>
+                                <div class="w-full p-3 border border-gray-200 rounded-lg bg-gray-50 text-sm text-gray-700">
+                                    Uses the customer&#39;s email on file
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="reminderProLock" class="mt-4 hidden">
+                            <div class="bg-amber-50 border border-amber-200 text-amber-900 rounded-lg p-3 text-sm">
+                                <strong>Pro feature.</strong> Upgrade to enable automated email reminders.
+                            </div>
+                        </div>
+
+                        <div id="reminderMissingEmail" class="mt-4 hidden">
+                            <div class="bg-red-50 border border-red-200 text-red-900 rounded-lg p-3 text-sm">
+                                This customer does not have an email on file. Add an email on the customer profile to enable reminders.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pricing Summary -->
+                    <div class="mt-6 bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-semibold text-gray-900 mb-2">Pricing Summary</h4>
+                        <div class="space-y-1 text-sm">
+                            <div class="flex justify-between">
+                                <span>Base Service:</span>
+                                <span id="basePrice">$0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Add-ons:</span>
+                                <span id="addonPrice">$0</span>
+                            </div>
+                            <div class="flex justify-between font-semibold text-lg border-t border-gray-200 pt-2">
+                                <span>Total:</span>
+                                <span id="totalPrice">$0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex space-x-3 mt-6">
+                        <button type="button" onclick="closeModal('newAppointmentModal')" 
+                                class="flex-1 py-3 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                                class="flex-1 py-3 px-4 btn-accent text-white rounded-lg hover:opacity-90 transition-opacity">
+                            Book Appointment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Appointment Modal -->
+    <div id="viewAppointmentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-2xl w-full max-h-screen overflow-y-auto">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 id="viewAppointmentTitle" class="font-display text-xl font-bold">Appointment Details</h3>
+                    <button onclick="closeModal('viewAppointmentModal')" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div id="viewAppointmentContent" class="min-h-[40px]"></div>
+
+                <div class="flex flex-col md:flex-row gap-3 mt-6">
+                    <button type="button" onclick="closeModal('viewAppointmentModal')"
+                            class="md:flex-1 py-3 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                        Close
+                    </button>
+                    <button id="viewAppointmentEditBtn" type="button"
+                            class="md:flex-1 py-3 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                        <i class="fas fa-pen mr-2"></i>Edit
+                    </button>
+                    <button id="viewAppointmentInvoiceBtn" type="button"
+                            class="md:flex-1 py-3 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                        <i class="fas fa-file-invoice-dollar mr-2"></i>Create Invoice
+                    </button>
+                    <button id="viewAppointmentDeleteBtn" type="button"
+                            class="md:flex-1 py-3 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                        <i class="fas fa-trash mr-2"></i>Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Customer Modal -->
+    <div id="quickCustomerModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-md w-full max-h-screen overflow-y-auto">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-display text-xl font-bold">Quick Add Customer</h3>
+                    <button onclick="closeModal('quickCustomerModal')" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="quickCustomerForm">
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
+                                <input type="text" id="quickFirstName" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
+                                <input type="text" id="quickLastName" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
+                            <input type="tel" id="quickPhone" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Vehicle Make</label>
+                            <input type="text" id="quickVehicleMake" placeholder="e.g., BMW, Mercedes" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                    </div>
+                    <div class="flex space-x-3 mt-6">
+                        <button type="button" onclick="closeModal('quickCustomerModal')" class="flex-1 py-3 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" class="flex-1 py-3 px-4 btn-primary text-white rounded-lg hover:opacity-90 transition-opacity">
+                            Add Customer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+  <script src="api-client.js"></script>
+  <script src="main-enhanced.js"></script>
+    <script src="notifications.js"></script>
+    <script>
+        // Appointment scheduling functionality
+        // Professional UX: allow clicking any day to manage appointments for that date.
+        // The day modal provides quick Edit/Delete actions.
+        // Calendar is selection-only (no popups on day click).
+        const CALENDAR_INTERACTIONS = false;
+        let currentDate = new Date();
+        let selectedDate = new Date();
+        let currentView = 'month';
+        let selectedDateKey = formatDateKey(selectedDate);
+
+        
+        let editingAppointmentId = null;
+        let editingOriginalCustomerName = null;
+function formatDateKey(dateObj) {
+            const y = dateObj.getFullYear();
+            const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const d = String(dateObj.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function parseDateKey(dateKey) {
+            // dateKey is expected in local YYYY-MM-DD format
+            const [y, m, d] = dateKey.split('-').map(n => parseInt(n, 10));
+            return new Date(y, (m || 1) - 1, d || 1);
+        }
+
+
+
+        function normalizeDateKey(value) {
+            if (!value) return '';
+            // If already in YYYY-MM-DD (or starts with it), just use first 10 chars
+            const m = String(value).match(/^\d{4}-\d{2}-\d{2}/);
+            if (m) return String(value).slice(0, 10);
+            // Fallback: try Date parsing, then format to local key
+            const d = new Date(value);
+            if (isNaN(d.getTime())) return '';
+            return formatDateKey(d);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeAppointmentScheduling();
+            loadAppointments();
+            setupAppointmentEventListeners();
+            animateAppointmentElements();
+            
+            try { focusAppointmentFromHash(); } catch(e) {}
+initializeServiceCatalogUI();
+            attachReminderEvents();
+
+            // Defensive: if another script threw during init and the calendar grid
+            // ended up empty, attempt a one-time re-render so Month View always
+            // shows the date grid.
+            setTimeout(() => {
+                try {
+                    const grid = document.getElementById('calendarGrid');
+                    const monthEl = document.getElementById('currentMonth');
+                    if (grid && grid.children.length === 0) {
+                        updateCalendarDisplay();
+                    }
+                    if (monthEl && !monthEl.textContent) {
+                        updateCalendarDisplay();
+                    }
+                } catch (e) {
+                    console.error('Calendar re-render failed:', e);
+                }
+            }, 0);
+        });
+
+        // === Service Catalog (Packages) + Add-ons ===
+        const defaultServicesCatalog = [
+            { id: 'basic', name: 'Basic Detail', category: 'basic', price: 80, duration: 2.5, active: true, popular: false },
+            { id: 'premium', name: 'Premium Detail', category: 'premium', price: 150, duration: 4, active: true, popular: true },
+            { id: 'ultimate', name: 'Ultimate Detail', category: 'premium', price: 250, duration: 6, active: true, popular: false },
+            { id: 'ceramic', name: 'Ceramic Coating', category: 'specialty', price: 500, duration: 8, active: true, popular: false },
+            { id: 'interior', name: 'Interior Only', category: 'basic', price: 60, duration: 1.5, active: true, popular: false },
+            { id: 'exterior', name: 'Exterior Only', category: 'basic', price: 50, duration: 1.5, active: true, popular: false }
+        ];
+
+        const defaultAddonsCatalog = [
+            { id: 'wax', name: 'Premium Wax', price: 25, duration: 0.5, active: true },
+            { id: 'tire-shine', name: 'Tire Shine', price: 15, duration: 0.25, active: true },
+            { id: 'engine-clean', name: 'Engine Clean', price: 35, duration: 0.75, active: true },
+            { id: 'pet-hair', name: 'Pet Hair Removal', price: 20, duration: 0.5, active: true },
+            { id: 'headlight', name: 'Headlight Restoration', price: 45, duration: 1, active: true },
+            { id: 'odor-removal', name: 'Odor Removal', price: 30, duration: 0.5, active: true }
+        ];
+
+        function getServicesCatalog() {
+            const services = JSON.parse(localStorage.getItem('services') || '[]');
+            return (services && services.length) ? services : defaultServicesCatalog;
+        }
+
+        function getAddonsCatalog() {
+            const addons = JSON.parse(localStorage.getItem('addons') || '[]');
+            return (addons && addons.length) ? addons : defaultAddonsCatalog;
+        }
+
+        function getServiceById(serviceId) {
+            return getServicesCatalog().find(s => String(s.id) === String(serviceId));
+        }
+
+        function getAddonById(addonId) {
+            return getAddonsCatalog().find(a => String(a.id) === String(addonId));
+        }
+
+        function populateServiceSelect() {
+            const serviceSelect = document.getElementById('serviceSelect');
+            if (!serviceSelect) return;
+
+            const services = getServicesCatalog().filter(s => s.active !== false);
+            // Keep the placeholder option
+            serviceSelect.querySelectorAll('option:not([value=""])').forEach(o => o.remove());
+
+            services.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.id;
+                const duration = s.duration ? ` (${s.duration} hrs)` : '';
+                opt.textContent = `${s.name} - $${Number(s.price || 0)}${duration}`;
+                serviceSelect.appendChild(opt);
+            });
+
+            // If a service was selected from Services page, preselect it
+            const preselected = localStorage.getItem('selectedServiceId');
+            if (preselected) {
+                serviceSelect.value = preselected;
+                localStorage.removeItem('selectedServiceId');
+            }
+        }
+
+        function populateAddonOptions() {
+            const container = document.getElementById('addonOptions');
+            if (!container) return;
+
+            const addons = getAddonsCatalog().filter(a => a.active !== false);
+            container.innerHTML = addons.map(a => `
+                <label class="flex items-center space-x-2">
+                    <input type="checkbox" name="addons" value="${a.id}" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                    <span class="text-sm">${a.name} (+$${Number(a.price || 0)})</span>
+                </label>
+            `).join('');
+        }
+
+        function initializeServiceCatalogUI() {
+            populateServiceSelect();
+            populateAddonOptions();
+            updatePricing();
+        }
+
+        function initializeAppointmentScheduling() {
+            updateCalendarDisplay();
+            loadTimeSlots();
+            updateAppointmentStats();
+        }
+
+        function updateCalendarDisplay() {
+            const monthNames = ["January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"];
+            
+            document.getElementById('currentMonth').textContent = 
+                `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+            
+            generateCalendar();
+        }
+
+        // --- Appointment status helpers (global) ---
+        // Normalize appointment status values so older stored records (e.g. "Canceled")
+        // behave consistently across the app.
+        function normalizeStatus(status) {
+            if (status == null) return '';
+            return String(status).trim().toLowerCase();
+        }
+
+        function isInactiveAppointmentStatus(status) {
+            const s = normalizeStatus(status);
+            // Inactive statuses should not show calendar dots/badges.
+            // Treat "completed" as inactive so finishing a job clears the calendar indicator.
+            return ['canceled', 'cancelled', 'no-show', 'no show', 'noshow', 'no_show', 'completed', 'complete', 'done'].includes(s);
+        }
+
+        function isActiveAppointmentStatus(status) {
+            // Backward compatible: older records without a status are treated as active.
+            if (!status) return true;
+            return !isInactiveAppointmentStatus(status);
+        }
+
+        function generateCalendar() {
+            const calendarGrid = document.getElementById('calendarGrid');
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            // Get first day of month and number of days
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            // Get appointments for this month (normalize dates to local YYYY-MM-DD)
+            const appointments = (getAppointments() || []).map(apt => ({
+                ...apt,
+                dateKey: normalizeDateKey(apt.date)
+            }));
+            const monthAppointments = appointments.filter(apt => {
+                if (!apt.dateKey) return false;
+                const aptDate = parseDateKey(apt.dateKey);
+                return aptDate.getFullYear() === year && aptDate.getMonth() === month;
+            });
+            
+            let calendarHTML = '';
+            
+            // Add empty cells for days before month starts
+            for (let i = 0; i < firstDay; i++) {
+                calendarHTML += '<div class="calendar-day p-3 border-r border-b border-gray-200 min-h-16"></div>';
+            }
+            
+            // Add days of the month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                const dateKey = formatDateKey(date);
+                const isToday = isDateToday(date);
+                const isSelected = isDateSelected(date);
+                const dayAppointments = monthAppointments
+                    .filter(apt => apt.dateKey === dateKey && isActiveAppointmentStatus(apt.status))
+                    .filter(apt => isActiveAppointmentStatus(apt.status));
+                
+                let classes = 'calendar-day p-3 border-r border-b border-gray-200 min-h-16 cursor-pointer';
+                if (isToday) classes += ' bg-blue-100';
+                if (isSelected) classes += ' selected';
+                if (dayAppointments.length > 0) classes += ' has-appointment';
+                
+                calendarHTML += `
+                    <div class="${classes}" data-date="${dateKey}">
+                        <div class="text-sm font-medium ${isToday ? 'text-blue-600' : 'text-gray-900'}">${day}</div>
+                        ${dayAppointments.length > 0 ? `
+                            <div class="mt-1 pointer-events-none">
+                                <div class="w-2 h-2 bg-orange-400 rounded-full inline-block mr-1"></div>
+                                <span class="text-xs text-gray-600">${dayAppointments.length}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+
+            // Add trailing empty cells so the month grid keeps a consistent shape
+            // (helps the UI not collapse when there are no appointments).
+            const usedCells = firstDay + daysInMonth;
+            const trailing = (7 - (usedCells % 7)) % 7;
+            for (let i = 0; i < trailing; i++) {
+                calendarHTML += '<div class="calendar-day p-3 border-r border-b border-gray-200 min-h-16"></div>';
+            }
+
+            // Ensure at least 6 rows (42 cells) for stable layout across months
+            const totalCells = usedCells + trailing;
+            if (totalCells < 42) {
+                const extra = 42 - totalCells;
+                for (let i = 0; i < extra; i++) {
+                    calendarHTML += '<div class="calendar-day p-3 border-r border-b border-gray-200 min-h-16"></div>';
+                }
+            }
+            
+            calendarGrid.innerHTML = calendarHTML;
+
+            // Delegate clicks so child elements (like dots) still open the day modal reliably
+            if (!window.__dpCalendarClickBound) {
+                // Bubble-phase delegation as a fallback (empty cells won't have inline handlers).
+                calendarGrid.addEventListener('click', (e) => {
+                    // Selection-only: clicking a day just loads that day's appointments below.
+                    const cell = e.target.closest('.calendar-day[data-date]');
+                    if (!cell) return;
+                    const key = cell.getAttribute('data-date');
+                    if (key) selectDate(key);
+                });
+                window.__dpCalendarClickBound = true;
+            }
+        }
+
+        function selectDate(dateKey) {
+            selectedDateKey = dateKey;
+            selectedDate = parseDateKey(dateKey);
+            generateCalendar();
+            loadDailyAppointments();
+            updateSelectedDateTitle();
+        }
+
+        // Calendar day click: select date and open a chooser to edit appointments
+        function onCalendarDayClick(dateKey) {
+            // Robust: never let a rendering error prevent the modal from opening.
+            try {
+                selectDate(dateKey); // updates calendar + daily list
+            } catch (err) {
+                console.error('selectDate failed:', err);
+                selectedDateKey = dateKey;
+            }
+
+            const listEl = document.getElementById('dayAppointmentsList');
+            const emptyEl = document.getElementById('dayNoAppointments');
+            const titleEl = document.getElementById('dayAppointmentsTitle');
+            // Keep the day modal view-only: remove any legacy "New Appointment" buttons if present.
+            try {
+                const footer = document.getElementById('dayAppointmentsFooter');
+                if (footer) {
+                    footer.querySelectorAll('button').forEach((btn) => {
+                        const label = (btn.textContent || '').trim().toLowerCase();
+                        if (label.includes('new appointment')) btn.remove();
+                    });
+                }
+            } catch (e) {
+                // no-op
+            }
+
+
+            try {
+                const d = parseDateKey(dateKey);
+                const title = d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                if (titleEl) titleEl.textContent = `Appointments • ${title}`;
+
+                const appointments = getAppointments() || [];
+                const dayAppointments = appointments
+                    .map(apt => ({ ...apt, dateKey: normalizeDateKey(apt.date) }))
+                    .filter(apt => apt.dateKey === dateKey)
+                    // Do not show canceled / no-show appointments in the day modal.
+                    .filter(apt => isActiveAppointmentStatus(apt.status))
+                    .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+
+                if (!listEl || !emptyEl) {
+                    openModal('dayAppointmentsModal');
+                    return;
+                }
+
+                listEl.innerHTML = '';
+
+                if (dayAppointments.length === 0) {
+                    emptyEl.classList.remove('hidden');
+                } else {
+                    emptyEl.classList.add('hidden');
+
+                    listEl.innerHTML = dayAppointments.map(appointment => {
+                        const customer = escapeHtml(appointment.customer || 'Unknown customer');
+                        const serviceName = escapeHtml(getServiceName(appointment.service));
+                        const time = escapeHtml(appointment.time || '');
+                        const status = escapeHtml(formatStatusLabel(appointment.status || 'scheduled'));
+                        const id = escapeHtml(String(appointment.id ?? ''));
+                        return `
+                            <div class="p-4 border border-gray-200 rounded-xl flex items-start justify-between gap-3">
+                                <div class="min-w-0">
+                                    <div class="font-medium text-gray-900 truncate">${customer}</div>
+                                    <div class="text-sm text-gray-600 truncate">${serviceName}</div>
+                                    <div class="text-xs text-gray-500 mt-1">${time} • ${status}</div>
+                                </div>
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <button type="button" class="day-edit-btn px-3 py-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 text-sm font-medium" data-edit-id="${id}">
+                                        <i class="fas fa-pen mr-1"></i>Edit
+                                    </button>
+                                    <button type="button" class="day-delete-btn px-3 py-1.5 rounded-lg bg-gray-900 text-white hover:bg-gray-800 text-sm font-medium" data-delete-id="${id}">
+                                        <i class="fas fa-ban mr-1"></i>Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    // Bind buttons (stop bubbling so the modal backdrop click doesn't fire)
+                    listEl.querySelectorAll('.day-edit-btn[data-edit-id]').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            const appointmentId = btn.getAttribute('data-edit-id');
+                            if (!appointmentId) return;
+                            openEditAppointmentFromDayModal(appointmentId);
+                        });
+                    });
+
+                    listEl.querySelectorAll('.day-delete-btn[data-delete-id]').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            const appointmentId = btn.getAttribute('data-delete-id');
+                            if (!appointmentId) return;
+                            deleteAppointmentFromDayModal(appointmentId, dateKey);
+                        });
+                    });
+                }
+            } catch (err) {
+                console.error('Day modal render failed:', err);
+            }
+
+            openModal('dayAppointmentsModal');
+        }
+
+        function openEditAppointmentFromDayModal(appointmentId) {
+            closeModal('dayAppointmentsModal');
+            openEditAppointment(appointmentId);
+        }
+
+        // (Intentionally removed) Creating an appointment from the calendar day modal is disabled.
+
+        // Delete from the day modal and refresh the modal list/calendar immediately
+        function deleteAppointmentFromDayModal(appointmentId, dateKey) {
+            if (!appointmentId) return;
+            const appointments = getAppointments() || [];
+            const apt = appointments.find(a => String(a.id) === String(appointmentId));
+            const st = String(apt?.status || 'scheduled').toLowerCase();
+            if (['completed','paid'].includes(st)) {
+                showNotification('Completed/paid appointments are read-only.', 'info');
+                return;
+            }
+
+            if (!(window.dpConfirm ? dpConfirm('Cancel this appointment?') : confirm('Cancel this appointment?'))) return;
+            const updated = appointments.map(a => {
+                if (String(a.id) !== String(appointmentId)) return a;
+                return { ...a, status: 'canceled', canceledAt: new Date().toISOString() };
+            });
+            localStorage.setItem('appointments', JSON.stringify(updated));
+
+            // Refresh calendar + lists
+            generateCalendar();
+            loadDailyAppointments();
+            updateAppointmentStats();
+
+            // Re-render the day modal content for the same date
+            onCalendarDayClick(dateKey || selectedDateKey);
+            showNotification('Appointment canceled.', 'success');
+        }
+
+
+        function loadDailyAppointments() {
+            const appointments = getAppointments();
+            const dailyAppointments = appointments.filter(apt => {
+                if (String(apt.status || 'scheduled').toLowerCase() !== 'scheduled') return false;
+                return normalizeDateKey(apt.date) === selectedDateKey;
+            });
+            
+            const container = document.getElementById('dailyAppointments');
+            
+            
+            if (!container) return;
+if (dailyAppointments.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-calendar-alt text-4xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500">No appointments scheduled for this date</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = dailyAppointments
+                .sort((a, b) => (a.time || '').localeCompare(b.time || ''))
+                .map(appointment => `
+                    <div class="appointment-card p-4 hover:bg-gray-50 transition-colors cursor-pointer" onclick="openAppointmentInfo('${appointment.id}')">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <div class="flex-shrink-0">
+                                    <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+                                        ${(appointment.customer || 'Unknown').split(' ').map(n => n.charAt(0)).join('')}
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-900">${customerLink(appointment.customer)}</h4>
+                                    <p class="text-sm text-gray-600">${appointment.time} • ${getServiceName(appointment.service)}</p>
+                                    <div class="flex items-center space-x-2 mt-1">
+                                        <span class="px-2 py-1 text-xs rounded-full ${getStatusClass(appointment.status)}">
+                                            ${formatStatusLabel(appointment.status || 'scheduled')}
+                                        </span>
+                                        ${appointment.addons && appointment.addons.length > 0 ? `
+                                            <span class="text-xs text-gray-500">
+                                                +${appointment.addons.length} add-ons
+                                            </span>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="event.stopPropagation(); completeAppointment('${appointment.id}')" class="px-3 py-2 rounded-lg text-sm font-medium bg-gray-900 text-white hover:bg-gray-800" title="Mark complete and create invoice">
+                                    Complete
+                                </button>
+                                <button onclick="openEditAppointment('${appointment.id}')" class="text-green-600 hover:text-green-800 p-2" title="Edit Appointment">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="event.stopPropagation(); deleteAppointment('${appointment.id}')" class="text-red-600 hover:text-red-800 p-2">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+        }
+
+        function loadTimeSlots() {
+            const timeSelect = document.getElementById('appointmentTime');
+            const timeSlots = [
+                '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
+                '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
+                '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
+                '17:00', '17:30', '18:00'
+            ];
+            
+            timeSelect.innerHTML = '<option value="">Select time slot...</option>' +
+                timeSlots.map(time => `<option value="${time}">${formatTime(time)}</option>`).join('');
+        }
+
+        function setupAppointmentEventListeners() {
+            // Customer search with autocomplete
+            const customerSearch = document.getElementById('customerSearch');
+            if (customerSearch) {
+                customerSearch.addEventListener('input', handleCustomerSearch);
+                customerSearch.addEventListener('focus', showCustomerSuggestions);
+                customerSearch.addEventListener('blur', hideCustomerSuggestions);
+            }
+
+            // Service selection with pricing update
+            const serviceSelect = document.getElementById('serviceSelect');
+            if (serviceSelect) {
+                serviceSelect.addEventListener('change', updatePricing);
+            }
+
+            // Add-ons pricing update
+            document.addEventListener('change', function(e) {
+                if (e && e.target && e.target.matches && e.target.matches('input[name="addons"]')) {
+                    updatePricing();
+                }
+            });
+
+            // Date change to update available time slots
+            const appointmentDate = document.getElementById('appointmentDate');
+            if (appointmentDate) {
+                appointmentDate.addEventListener('change', updateAvailableTimeSlots);
+            }
+
+            // Form submissions
+            const appointmentForm = document.getElementById('appointmentForm');
+            if (appointmentForm) {
+                appointmentForm.addEventListener('submit', handleAppointmentSubmission);
+            }
+
+            const quickCustomerForm = document.getElementById('quickCustomerForm');
+            if (quickCustomerForm) {
+                quickCustomerForm.addEventListener('submit', handleQuickCustomerSubmission);
+            }
+        }
+
+        function handleCustomerSearch(e) {
+            const query = e.target.value.toLowerCase();
+            if (query.length < 2) return;
+
+            const customers = getCustomers();
+            const matches = customers.filter(customer => 
+                customer.firstName.toLowerCase().includes(query) ||
+                customer.lastName.toLowerCase().includes(query) ||
+                customer.phone.includes(query)
+            );
+
+            showCustomerSuggestions(matches);
+        }
+
+        function showCustomerSuggestions(customers = null) {
+            const suggestions = document.getElementById('customerSuggestions');
+            const searchInput = document.getElementById('customerSearch');
+            
+            if (!customers) {
+                customers = getCustomers().slice(0, 5);
+            }
+
+            if (customers.length === 0) {
+                suggestions.innerHTML = '<div class="p-3 text-sm text-gray-500">No customers found</div>';
+            } else {
+                suggestions.innerHTML = (Array.isArray(customers) ? customers : []).map(customer => `
+                    <div class="p-3 hover:bg-gray-100 cursor-pointer border-b border-gray-200 last:border-b-0" 
+                         onclick="selectCustomer('${customer.id}', '${customer.firstName} ${customer.lastName}')">
+                        <div class="font-medium">${customer.firstName} ${customer.lastName}</div>
+                        <div class="text-sm text-gray-600">${customer.phone}</div>
+                        <div class="text-sm text-gray-500">${customer.vehicleMake || 'No vehicle'}</div>
+                    </div>
+                `).join('');
+            }
+
+            suggestions.classList.remove('hidden');
+        }
+
+        function hideCustomerSuggestions() {
+            setTimeout(() => {
+                document.getElementById('customerSuggestions').classList.add('hidden');
+            }, 200);
+        }
+
+        function selectCustomer(customerId, customerName) {
+            document.getElementById('customerSearch').value = customerName;
+            document.getElementById('customerSuggestions').classList.add('hidden');
+        }
+
+        function updatePricing() {
+            const serviceSelect = document.getElementById('serviceSelect');
+            const selectedServiceId = serviceSelect ? serviceSelect.value : '';
+            const service = getServiceById(selectedServiceId);
+
+            const basePrice = service ? Number(service.price || 0) : 0;
+
+            let addonPrice = 0;
+            const addonCheckboxes = document.querySelectorAll('input[name="addons"]:checked');
+            addonCheckboxes.forEach(checkbox => {
+                const addon = getAddonById(checkbox.value);
+                addonPrice += addon ? Number(addon.price || 0) : 0;
+            });
+
+            const totalPrice = basePrice + addonPrice;
+
+            document.getElementById('basePrice').textContent = `$${basePrice}`;
+            document.getElementById('addonPrice').textContent = `$${addonPrice}`;
+            document.getElementById('totalPrice').textContent = `$${totalPrice}`;
+        }
+
+        function updateAvailableTimeSlots() {
+            const dateInput = document.getElementById('appointmentDate');
+            const timeSelect = document.getElementById('appointmentTime');
+            
+            if (!dateInput.value) return;
+
+            const selectedDate = new Date(dateInput.value);
+            const today = new Date();
+            const isToday = selectedDate.toDateString() === today.toDateString();
+            
+            const appointments = getAppointments();
+            const bookedSlots = appointments
+                .filter(apt => apt.date === dateInput.value && isActiveAppointmentStatus(apt.status) && (!editingAppointmentId || String(apt.id) !== String(editingAppointmentId)))
+                .map(apt => apt.time);
+
+            const timeSlots = timeSelect.options;
+            for (let i = 1; i < timeSlots.length; i++) {
+                const timeSlot = timeSlots[i];
+                const isPast = isToday && timeSlot.value < today.getHours().toString().padStart(2, '0') + ':' + today.getMinutes().toString().padStart(2, '0');
+                const isBooked = bookedSlots.includes(timeSlot.value);
+                
+                if (isPast || isBooked) {
+                    timeSlot.disabled = true;
+                    timeSlot.classList.add('unavailable');
+                } else {
+                    timeSlot.disabled = false;
+                    timeSlot.classList.remove('unavailable');
+                }
+            }
+        }
+
+        // ---- Pro Automated Email Reminders (foundation) ----
+        function getCustomerEmailForName(fullName) {
+            try {
+                const customer = findCustomerByName(fullName);
+                const email = (customer && customer.email) ? String(customer.email).trim() : '';
+                return email || '';
+            } catch (e) {
+                return '';
+            }
+        }
+
+        function computeReminderAtISO(dateKey, timeVal, offsetHours) {
+            try {
+                const d = normalizeDateKey(dateKey);
+                const base = new Date(`${d}T${timeVal}:00`);
+                if (isNaN(base.getTime())) return null;
+                const ms = base.getTime() - (Number(offsetHours || 0) * 60 * 60 * 1000);
+                return new Date(ms).toISOString();
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function refreshReminderUI() {
+            const enabledEl = document.getElementById('reminderEnabled');
+            const offsetEl = document.getElementById('reminderOffsetHours');
+            const proLock = document.getElementById('reminderProLock');
+            const missingEmail = document.getElementById('reminderMissingEmail');
+
+            if (!enabledEl || !offsetEl) return;
+
+            const isPro = (typeof dpIsPro === 'function') ? dpIsPro() : false;
+            const enabled = !!enabledEl.checked;
+
+            // Lock UI for Free plan
+            if (!isPro) {
+                offsetEl.disabled = true;
+                if (proLock) proLock.classList.remove('hidden');
+            } else {
+                offsetEl.disabled = !enabled ? true : false;
+                if (proLock) proLock.classList.add('hidden');
+            }
+
+            // Show missing email warning only when trying to enable
+            if (missingEmail) {
+                const email = getCustomerEmailForName(document.getElementById('customerSearch')?.value || '');
+                if (enabled && isPro && !email) missingEmail.classList.remove('hidden');
+                else missingEmail.classList.add('hidden');
+            }
+        }
+
+        function attachReminderEvents() {
+            const enabledEl = document.getElementById('reminderEnabled');
+            const offsetEl = document.getElementById('reminderOffsetHours');
+            const customerEl = document.getElementById('customerSearch');
+            const btnTest = document.getElementById('btnTestReminderEmail');
+            const btnServerUrl = document.getElementById('btnSetEmailServerUrl');
+
+            if (enabledEl) {
+                enabledEl.addEventListener('change', () => {
+                    const isPro = (typeof dpIsPro === 'function') ? dpIsPro() : false;
+                    if (enabledEl.checked && !isPro) {
+                        // Don’t allow enabling on Free plan
+                        enabledEl.checked = false;
+                        if (typeof dpRequirePro === 'function') dpRequirePro('Automated email reminders');
+                        else alert('Automated email reminders are available on the Pro plan.');
+                    }
+                    refreshReminderUI();
+                });
+            }
+            if (offsetEl) {
+                offsetEl.addEventListener('change', refreshReminderUI);
+            }
+            if (customerEl) {
+                customerEl.addEventListener('input', () => {
+                    // update missing email state as user picks a customer
+                    refreshReminderUI();
+                });
+                customerEl.addEventListener('blur', refreshReminderUI);
+            }
+
+            // Initial state
+            refreshReminderUI();
+
+            if (btnServerUrl) {
+                btnServerUrl.addEventListener('click', () => {
+                    const current = localStorage.getItem('dpEmailServerUrl') || 'http://localhost:3333';
+                    const next = prompt('Email server URL (run the included server/server.js):', current);
+                    if (next === null) return;
+                    if (typeof dpSetEmailServerUrl === 'function') dpSetEmailServerUrl(next);
+                    else localStorage.setItem('dpEmailServerUrl', String(next || '').trim());
+                    showNotification('Email server URL saved.', 'success');
+                });
+            }
+
+            if (btnTest) {
+                btnTest.addEventListener('click', async () => {
+                    const name = document.getElementById('customerSearch')?.value || '';
+                    const email = getCustomerEmailForName(name);
+                    if (!email) {
+                        showNotification('No customer email on file. Add one on the customer profile first.', 'error');
+                        return;
+                    }
+                    const baseUrl = (localStorage.getItem('dpEmailServerUrl') || 'http://localhost:3333').replace(/\/$/, '');
+                    try {
+                        const res = await fetch(baseUrl + '/api/send-email', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                to: email,
+                                subject: 'DetailPro CRM test email',
+                                text: 'This is a test email from DetailPro CRM. Your reminder system is configured correctly.'
+                            })
+                        });
+                        if (!res.ok) {
+                            const t = await res.text().catch(() => '');
+                            throw new Error(t || `Email server error (${res.status})`);
+                        }
+                        showNotification('Test email sent (check your inbox).', 'success');
+                    } catch (err) {
+                        showNotification(`Could not send test email: ${String(err?.message || err)}`, 'error');
+                    }
+                });
+            }
+        }
+
+
+                function handleAppointmentSubmission(e) {
+            e.preventDefault();
+
+            const customerName = document.getElementById('customerSearch').value;
+            const selectedAddons = Array.from(document.querySelectorAll('input[name="addons"]:checked')).map(cb => cb.value);
+
+            // --- Pricing snapshot (stored on appointment so invoices can pull correct totals) ---
+            const selectedServiceIdForPrice = document.getElementById('serviceSelect')?.value || '';
+            const serviceObjForPrice = (typeof getServiceById === 'function') ? getServiceById(selectedServiceIdForPrice) : null;
+            const basePriceNum = serviceObjForPrice ? Number(serviceObjForPrice.price || 0) : 0;
+            let addonPriceNum = 0;
+            selectedAddons.forEach(aid => {
+                const addonObj = (typeof getAddonById === 'function') ? getAddonById(aid) : null;
+                addonPriceNum += addonObj ? Number(addonObj.price || 0) : 0;
+            });
+            const totalPriceNum = Number(basePriceNum) + Number(addonPriceNum);
+            const serviceNameSnapshot = (serviceObjForPrice && serviceObjForPrice.name) ? serviceObjForPrice.name : '';
+
+            const dateKey = document.getElementById('appointmentDate').value;
+            const timeVal = document.getElementById('appointmentTime').value;
+            const serviceVal = document.getElementById('serviceSelect').value;
+
+            const appointments = getAppointments();
+            const existing = editingAppointmentId ? appointments.find(a => a.id === editingAppointmentId) : null;
+
+
+            // Reminder UI values
+            const reminderEnabled = !!document.getElementById('reminderEnabled')?.checked;
+            const reminderOffsetHours = parseInt(document.getElementById('reminderOffsetHours')?.value || '24', 10);
+            const customerEmail = getCustomerEmailForName(customerName);
+
+            const appointmentData = {
+                id: editingAppointmentId || generateId(),
+                customer: customerName,
+                date: normalizeDateKey(dateKey),
+                time: timeVal,
+                service: serviceVal,
+                serviceName: serviceNameSnapshot,
+                addons: selectedAddons,
+                basePrice: basePriceNum,
+                addonPrice: addonPriceNum,
+                totalPrice: totalPriceNum,
+                notes: document.getElementById('appointmentNotes').value,
+
+                // Pro: Automated Email Reminder (no sending yet)
+                reminderEnabled: reminderEnabled,
+                reminderOffsetHours: reminderOffsetHours,
+                reminderEmail: customerEmail,
+                reminderAt: reminderEnabled ? computeReminderAtISO(dateKey, timeVal, reminderOffsetHours) : null,
+                reminderStatus: reminderEnabled ? (existing?.reminderStatus === 'sent' ? 'sent' : 'scheduled') : 'off',
+                reminderSentAt: existing?.reminderSentAt || null,
+
+                status: existing?.status || 'scheduled',
+                createdAt: existing?.createdAt || new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+
+            // Validate reminder requirements
+            if (reminderEnabled) {
+                const isPro = (typeof dpIsPro === 'function') ? dpIsPro() : false;
+                if (!isPro) {
+                    if (typeof dpRequirePro === 'function') dpRequirePro('Automated email reminders');
+                    else alert('Automated email reminders are available on the Pro plan.');
+                    return;
+                }
+                if (!customerEmail) {
+                    showNotification('Customer email missing. Add an email on the customer profile to enable reminders.', 'error');
+                    return;
+                }
+                if (!appointmentData.reminderAt) {
+                    showNotification('Could not schedule reminder. Please check date/time.', 'error');
+                    return;
+                }
+            }
+
+
+            // Prevent double-booking: ignore canceled/no-show and allow keeping the same slot when editing
+            const hasConflict = appointments.some(a => {
+                if (a.date !== dateKey) return false;
+                if (a.time !== timeVal) return false;
+                if (!isActiveAppointmentStatus(a.status)) return false;
+                if (editingAppointmentId && String(a.id) === String(editingAppointmentId)) return false;
+                return true;
+            });
+            if (hasConflict) {
+                showNotification('That time slot is already booked. Please choose another time.', 'error');
+                return;
+            }
+
+            if (editingAppointmentId) {
+                updateAppointment(appointmentData);
+                showNotification('Appointment updated successfully!', 'success');
+            } else {
+                saveAppointment(appointmentData);
+                showNotification('Appointment scheduled successfully!', 'success');
+            }
+
+            // Reset modal state
+            editingAppointmentId = null;
+            editingOriginalCustomerName = null;
+            setAppointmentModalMode('new');
+
+            closeModal('newAppointmentModal');
+            e.target.reset();
+            // Clear add-ons checkboxes
+            document.querySelectorAll('input[name="addons"]').forEach(cb => cb.checked = false);
+
+            // Reset reminder UI
+            const re = document.getElementById('reminderEnabled');
+            const ro = document.getElementById('reminderOffsetHours');
+            if (re) re.checked = false;
+            if (ro) ro.value = '24';
+            try { refreshReminderUI(); } catch(e) {}
+
+            loadAppointments();
+        }
+
+        function handleQuickCustomerSubmission(e) {
+            e.preventDefault();
+            
+            const customerData = {
+                id: generateId(),
+                firstName: document.getElementById('quickFirstName').value,
+                lastName: document.getElementById('quickLastName').value,
+                phone: document.getElementById('quickPhone').value,
+                vehicleMake: document.getElementById('quickVehicleMake').value,
+                createdAt: new Date().toISOString(),
+                totalVisits: 0,
+                totalSpent: 0,
+                lastVisit: null
+            };
+
+            // Validate required fields
+            if (!customerData.firstName || !customerData.lastName || !customerData.phone) {
+                showNotification('Please fill in all required fields', 'error');
+                return;
+            }
+
+            saveCustomer(customerData);
+            closeModal('quickCustomerModal');
+            
+            // Auto-fill the customer search
+            document.getElementById('customerSearch').value = `${customerData.firstName} ${customerData.lastName}`;
+            
+            showNotification('Customer added successfully!', 'success');
+            e.target.reset();
+        }
+
+        
+        
+        function openNewAppointmentModal() {
+            editingAppointmentId = null;
+            editingOriginalCustomerName = null;
+            setAppointmentModalMode('new');
+            initializeServiceCatalogUI();
+
+            // Prefill date with currently selected day in the calendar
+            const dateInput = document.getElementById('appointmentDate');
+            if (dateInput) dateInput.value = selectedDateKey || formatDateKey(new Date());
+
+            // Clear fields
+            const form = document.getElementById('appointmentForm');
+            if (form) form.reset();
+            document.querySelectorAll('input[name="addons"]').forEach(cb => cb.checked = false);
+
+            // Reset reminder UI
+            const re = document.getElementById('reminderEnabled');
+            const ro = document.getElementById('reminderOffsetHours');
+            if (re) re.checked = false;
+            if (ro) ro.value = '24';
+            try { refreshReminderUI(); } catch(e) {}
+
+            openModal('newAppointmentModal');
+        }
+
+function setAppointmentModalMode(mode) {
+            const titleEl = document.querySelector('#newAppointmentModal h3');
+            const submitBtn = document.querySelector('#appointmentForm button[type="submit"]');
+            if (mode === 'edit') {
+                if (titleEl) titleEl.textContent = 'Edit Appointment';
+                if (submitBtn) submitBtn.textContent = 'Save Changes';
+            } else {
+                if (titleEl) titleEl.textContent = 'New Appointment';
+                if (submitBtn) submitBtn.textContent = 'Schedule Appointment';
+            }
+        }
+
+        function openEditAppointment(appointmentId) {
+            const appointments = getAppointments();
+            const appointment = appointments.find(a => a.id === appointmentId);
+            if (!appointment) return;
+
+            const st = String(appointment.status || 'scheduled').toLowerCase();
+            if (['completed','paid'].includes(st)) {
+                showNotification('Completed/paid appointments are read-only.', 'info');
+                try { openAppointmentInfo(appointmentId); } catch(e) {}
+                return;
+            }
+
+            editingAppointmentId = appointmentId;
+            editingOriginalCustomerName = appointment.customer || null;
+
+            setAppointmentModalMode('edit');
+            initializeServiceCatalogUI();
+
+            document.getElementById('customerSearch').value = appointment.customer || '';
+            document.getElementById('appointmentDate').value = normalizeDateKey(appointment.date) || formatDateKey(new Date());
+            document.getElementById('appointmentTime').value = appointment.time || '';
+            document.getElementById('serviceSelect').value = appointment.service || '';
+            document.getElementById('appointmentNotes').value = appointment.notes || '';
+
+            // Set add-ons
+            const selected = new Set(appointment.addons || []);
+            document.querySelectorAll('input[name="addons"]').forEach(cb => {
+                cb.checked = selected.has(cb.value);
+            });
+
+            // Reminder fields
+            const re = document.getElementById('reminderEnabled');
+            const ro = document.getElementById('reminderOffsetHours');
+            if (re) re.checked = !!appointment.reminderEnabled;
+            if (ro) ro.value = String(appointment.reminderOffsetHours || 24);
+
+            updatePricing();
+            try { refreshReminderUI(); } catch(e) {}
+            openModal('newAppointmentModal');
+        }
+
+        // Backwards-compatible alias: some UI handlers call editAppointment().
+        function editAppointment(appointmentId) {
+            return openEditAppointment(appointmentId);
+        }
+
+        function updateAppointment(appointment) {
+            const appointments = getAppointments();
+            const idx = appointments.findIndex(a => a.id === appointment.id);
+            if (idx === -1) return;
+            appointments[idx] = appointment;
+            localStorage.setItem('appointments', JSON.stringify(appointments));
+        }
+
+function loadAppointments() {
+            // Be resilient: missing optional sections should not break calendar rendering
+            try { updatePipelineCounts(); } catch (e) {}
+            try { loadDailyAppointments(); } catch (e) {}
+            try { updateAppointmentStats(); } catch (e) {}
+            try { loadUpcomingAppointments(); } catch (e) {}
+            try { generateCalendar(); } catch (e) {}
+        }
+        function updateAppointmentStats() {
+            const appointments = getAppointments();
+            const today = formatDateKey(new Date());
+            const thisWeek = getThisWeekDates();
+            
+            // Only count active appointments (exclude canceled/no-show variants)
+            const todayCount = appointments
+                .filter(apt => normalizeDateKey(apt.date) === today)
+                .filter(apt => isActiveAppointmentStatus(apt.status))
+                .length;
+
+            const weekCount = appointments
+                .filter(apt => thisWeek.includes(normalizeDateKey(apt.date)))
+                .filter(apt => isActiveAppointmentStatus(apt.status))
+                .length;
+
+            const inProgressCount = appointments
+                .filter(apt => normalizeStatus(apt.status) === 'in-progress')
+                .length;
+
+            const paidCount = appointments
+                .filter(apt => normalizeStatus(apt.status) === 'paid')
+                .length;
+            
+            document.getElementById('todayCount').textContent = todayCount;
+            document.getElementById('weekCount').textContent = weekCount;
+            document.getElementById('inProgressCount').textContent = inProgressCount;
+            document.getElementById('paidCount').textContent = paidCount;
+        }
+
+        function loadUpcomingAppointments() {
+            const appointments = getAppointments();
+            const today = new Date();
+            const upcoming = appointments
+                .filter(apt => new Date(apt.date) >= today)
+                .filter(apt => statusFilter === 'all' ? true : ((apt.status || 'scheduled') === statusFilter))
+                .sort((a, b) => {
+                    const dateA = new Date(a.date);
+                    const dateB = new Date(b.date);
+                    if (dateA.getTime() === dateB.getTime()) {
+                        return (a.time||'').localeCompare(b.time||'');
+                    }
+                    return dateA - dateB;
+                })
+                .slice(0, 5);
+
+            const container = document.getElementById('upcomingAppointments');
+            
+            
+            
+            if (!container) return;
+if (!container) return;
+if (upcoming.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-calendar-check text-4xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500">No upcoming appointments</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = upcoming.map(appointment => `
+                <div class="appointment-card p-4 hover:bg-gray-50 transition-colors cursor-pointer" onclick="openAppointmentInfo('${appointment.id}')">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <div class="flex-shrink-0">
+                                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                    ${(appointment.customer || 'Unknown').split(' ').map(n => n.charAt(0)).join('')}
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-900">${customerLink(appointment.customer)}</h4>
+                                <p class="text-sm text-gray-600">
+                                    ${formatDate(appointment.date)} at ${formatTime(appointment.time)}
+                                </p>
+                                <p class="text-sm text-gray-500">${getServiceName(appointment.service)}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="px-2 py-1 text-xs rounded-full ${getStatusClass(appointment.status)}">
+                                ${formatStatusLabel(appointment.status || 'scheduled')}
+                            </span>
+                            <button onclick="event.stopPropagation(); updateAppointmentStatus('${appointment.id}')" class="text-gray-600 hover:text-gray-800" title="Advance Status">
+                                <i class="fas fa-rotate-right"></i>
+                            </button>
+                            <button onclick="event.stopPropagation(); markNoShow('${appointment.id}')" class="text-red-600 hover:text-red-800" title="Mark No Show">
+                                <i class="fas fa-user-slash"></i>
+                            </button>
+                            <button onclick="event.stopPropagation(); completeAppointment('${appointment.id}')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-900 text-white hover:bg-gray-800" title="Mark complete and create invoice">
+                                Complete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateSelectedDateTitle() {
+            document.getElementById('selectedDateTitle').textContent =
+                `Appointments for ${formatDate(selectedDateKey)}`;
+        }
+
+        // Navigation functions
+        function previousMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            updateCalendarDisplay();
+        }
+
+        function nextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            updateCalendarDisplay();
+        }
+
+        function goToToday() {
+            currentDate = new Date();
+            selectedDate = new Date();
+            selectedDateKey = formatDateKey(selectedDate);
+            updateCalendarDisplay();
+            loadDailyAppointments();
+            updateSelectedDateTitle();
+        }
+
+        function changeViewMode() {
+            const viewMode = document.getElementById('viewMode').value;
+            currentView = viewMode;
+            // In a full implementation, this would change the calendar view
+            showNotification(`View changed to ${viewMode} view`, 'info');
+        }
+
+
+        // Job status pipeline filtering
+        let statusFilter = 'all';
+
+        function formatStatusLabel(status) {
+            const labels = {
+                'scheduled': 'Scheduled',
+                'confirmed': 'Confirmed',
+                'in-progress': 'In Progress',
+                'completed': 'Completed',
+                'no-show': 'No Show',
+                'canceled': 'Canceled'
+            };
+            return labels[status] || status;
+        }
+
+
+        function getStatusClass(status){
+            const s = String(status || 'scheduled').toLowerCase();
+            switch (s){
+                case 'scheduled': return 'status-scheduled';
+                case 'confirmed': return 'status-confirmed';
+                case 'in-progress': return 'status-in-progress';
+                case 'completed': return 'status-completed';
+                case 'no-show': return 'status-no-show';
+                case 'canceled': return 'status-canceled';
+                default: return 'status-scheduled';
+            }
+        }
+
+        function setStatusFilter(status) {
+            statusFilter = status || 'all';
+            const hint = document.getElementById('statusFilterHint');
+            if (statusFilter && statusFilter !== 'all') {
+                hint.style.display = 'block';
+                hint.textContent = `Filtering by: ${formatStatusLabel(statusFilter)}`;
+            } else {
+                hint.style.display = 'none';
+                hint.textContent = '';
+            }
+            loadAppointments();
+        }
+
+        function updatePipelineCounts() {
+            
+            const elToday = document.getElementById('countToday');
+            const elWeek = document.getElementById('countWeek');
+            const elProgress = document.getElementById('countProgress');
+            const elPaid = document.getElementById('countPaid');
+            if (!elToday || !elWeek || !elProgress || !elPaid) return;
+const appointments = getAppointments();
+            const counts = {
+                'new-lead': 0,
+                'scheduled': 0,
+                'in-progress': 0,
+                'completed': 0,
+                'paid': 0
+            };
+            appointments.forEach(a => {
+                const s = a.status || 'scheduled';
+                if (counts[s] !== undefined) counts[s] += 1;
+            });
+
+            Object.keys(counts).forEach(k => {
+                const el = document.getElementById(`pipelineCount-${k}`);
+                if (el) el.textContent = counts[k];
+            });
+        }
+
+        // Utility functions
+        function isDateToday(date) {
+            return date.toDateString() === new Date().toDateString();
+        }
+
+        function isDateSelected(date) {
+            return date.toDateString() === selectedDate.toDateString();
+        }
+
+        function getThisWeekDates() {
+            const today = new Date();
+            const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
+            const dates = [];
+            
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(startOfWeek);
+                date.setDate(startOfWeek.getDate() + i);
+                dates.push(date.toISOString().split('T')[0]);
+            }
+            
+            return dates;
+        }
+
+        function getServiceName(serviceType) {
+            const serviceNames = {
+                'basic': 'Basic Detail',
+                'premium': 'Premium Detail',
+                'ultimate': 'Ultimate Detail',
+                'ceramic': 'Ceramic Coating',
+                'interior': 'Interior Only',
+                'exterior': 'Exterior Only'
+            };
+            return serviceNames[serviceType] || serviceType;
+        }
+
+        function formatTime(time) {
+            const [hours, minutes] = time.split(':');
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const displayHour = hour % 12 || 12;
+            return `${displayHour}:${minutes} ${ampm}`;
+        }
+
+        function formatDate(dateString) {
+            const key = normalizeDateKey(dateString);
+            const date = key ? parseDateKey(key) : new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+
+        function calculateTotalPrice() {
+            const serviceSelect = document.getElementById('serviceSelect');
+            const selectedServiceId = serviceSelect ? serviceSelect.value : '';
+            const service = getServiceById(selectedServiceId);
+
+            const basePrice = service ? Number(service.price || 0) : 0;
+
+            let addonPrice = 0;
+            const addonCheckboxes = document.querySelectorAll('input[name="addons"]:checked');
+            addonCheckboxes.forEach(checkbox => {
+                const addon = getAddonById(checkbox.value);
+                addonPrice += addon ? Number(addon.price || 0) : 0;
+            });
+
+            return basePrice + addonPrice;
+        }
+
+        function viewAppointment(appointmentId) {
+            const appointments = getAppointments();
+            const apt = (appointments || []).find(a => String(a.id) === String(appointmentId));
+            if (!apt) {
+                showNotification('Appointment not found.', 'error');
+                return;
+            }
+
+            const modal = document.getElementById('viewAppointmentModal');
+            const content = document.getElementById('viewAppointmentContent');
+            const title = document.getElementById('viewAppointmentTitle');
+
+            if (!modal || !content) {
+                showNotification('Appointment details unavailable.', 'info');
+                return;
+            }
+
+            const customerName = (apt.customer || apt.customerName || '').trim() || 'Customer';
+            const serviceName = (() => {
+                try {
+                    const svc = (typeof getServiceById === 'function') ? getServiceById(apt.service || apt.serviceId) : null;
+                    if (svc && svc.name) return svc.name;
+                } catch (e) {}
+                return apt.serviceName || (typeof getServiceName === 'function' ? getServiceName(apt.service) : (apt.service || 'Service'));
+            })();
+
+            const addons = Array.isArray(apt.addons) ? apt.addons : (Array.isArray(apt.addonIds) ? apt.addonIds : []);
+            const addonNames = (addons || []).map(id => {
+                try {
+                    const a = (typeof getAddonById === 'function') ? getAddonById(id) : null;
+                    return (a && a.name) ? a.name : String(id);
+                } catch (e) {
+                    return String(id);
+                }
+            }).filter(Boolean);
+
+            const statusLabel = typeof formatStatusLabel === 'function'
+                ? formatStatusLabel(apt.status || 'scheduled')
+                : String(apt.status || 'scheduled');
+
+            const total = (typeof apt.totalPrice !== 'undefined')
+                ? `$${Number(apt.totalPrice || 0).toFixed(2)}`
+                : (() => {
+                    try {
+                        const svc = (typeof getServiceById === 'function') ? getServiceById(apt.service || apt.serviceId) : null;
+                        const base = svc ? Number(svc.price || 0) : 0;
+                        let add = 0;
+                        (addons || []).forEach(id => {
+                            const a = (typeof getAddonById === 'function') ? getAddonById(id) : null;
+                            add += a ? Number(a.price || 0) : 0;
+                        });
+                        return `$${(base + add).toFixed(2)}`;
+                    } catch (e) {
+                        return '';
+                    }
+                })();
+
+            const notes = (apt.notes || apt.appointmentNotes || apt.specialInstructions || '').trim();
+            const dateText = formatDate(apt.date);
+            const timeText = apt.time ? formatTime(apt.time) : '';
+
+            const reminderEnabled = !!apt.reminderEnabled;
+            const reminderOffsetHours = Number(apt.reminderOffsetHours || 0);
+
+            if (title) title.textContent = `${customerName} — ${dateText}`;
+
+            content.innerHTML = `
+                <div class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <div class="text-xs uppercase tracking-wide text-gray-500">Customer</div>
+                            <div class="text-sm font-medium text-gray-900">${escapeHtml(customerName)}</div>
+                        </div>
+                        <div>
+                            <div class="text-xs uppercase tracking-wide text-gray-500">Status</div>
+                            <div class="text-sm font-medium text-gray-900">${escapeHtml(statusLabel)}</div>
+                        </div>
+                        <div>
+                            <div class="text-xs uppercase tracking-wide text-gray-500">Date</div>
+                            <div class="text-sm font-medium text-gray-900">${escapeHtml(dateText)}</div>
+                        </div>
+                        <div>
+                            <div class="text-xs uppercase tracking-wide text-gray-500">Time</div>
+                            <div class="text-sm font-medium text-gray-900">${escapeHtml(timeText || '—')}</div>
+                        </div>
+                        <div>
+                            <div class="text-xs uppercase tracking-wide text-gray-500">Service</div>
+                            <div class="text-sm font-medium text-gray-900">${escapeHtml(serviceName)}</div>
+                        </div>
+                        <div>
+                            <div class="text-xs uppercase tracking-wide text-gray-500">Total</div>
+                            <div class="text-sm font-medium text-gray-900">${escapeHtml(total || '—')}</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="text-xs uppercase tracking-wide text-gray-500">Add-ons</div>
+                        <div class="text-sm text-gray-900">${addonNames.length ? escapeHtml(addonNames.join(', ')) : 'None'}</div>
+                    </div>
+
+                    <div>
+                        <div class="text-xs uppercase tracking-wide text-gray-500">Special Instructions</div>
+                        <div class="text-sm text-gray-900 whitespace-pre-wrap">${notes ? escapeHtml(notes) : '—'}</div>
+                    </div>
+
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <div class="flex items-start justify-between gap-4">
+                            <div>
+                                <div class="font-semibold text-gray-900">Automated Email Reminder <span class="text-xs font-medium text-gray-500">(Pro)</span></div>
+                                <div class="text-sm text-gray-600 mt-1">${reminderEnabled ? `Enabled — ${reminderOffsetHours || 24} hours before` : 'Not enabled'}</div>
+                            </div>
+                            <div class="text-sm font-medium ${reminderEnabled ? 'text-green-700' : 'text-gray-500'}">${reminderEnabled ? 'On' : 'Off'}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const editBtn = document.getElementById('viewAppointmentEditBtn');
+            const invoiceBtn = document.getElementById('viewAppointmentInvoiceBtn');
+            const deleteBtn = document.getElementById('viewAppointmentDeleteBtn');
+
+            // Open the existing Edit Appointment flow (same modal as "New Appointment").
+            // Older code referenced editAppointment(); keep it working by calling openEditAppointment().
+            if (editBtn) editBtn.onclick = () => { closeModal('viewAppointmentModal'); openEditAppointment(appointmentId); };
+            if (invoiceBtn) invoiceBtn.onclick = () => { closeModal('viewAppointmentModal'); createInvoiceFromAppointment(appointmentId); };
+            if (deleteBtn) deleteBtn.onclick = () => { closeModal('viewAppointmentModal'); deleteAppointment(appointmentId); };
+
+            openModal('viewAppointmentModal');
+        }
+
+        
+
+        function createInvoiceFromAppointment(appointmentId) {
+            // Redirect to invoices page and let it build an invoice from appointment data
+            window.location.href = `invoices.html?fromAppointment=${appointmentId}`;
+        }
+
+        // One-click completion: mark appointment completed and jump to invoices to collect payment.
+        function completeAppointment(appointmentId) {
+            const appointments = getAppointments();
+            const apt = appointments.find(a => a.id === appointmentId);
+            if (!apt) return;
+
+            const current = String(apt.status || 'scheduled').toLowerCase();
+            if (current === 'canceled' || current === 'no-show') {
+                showNotification(`Cannot complete a ${formatStatusLabel(current)} appointment`, 'info');
+                return;
+            }
+
+            apt.status = 'completed';
+            apt.completedAt = apt.completedAt || new Date().toISOString();
+            localStorage.setItem('appointments', JSON.stringify(appointments));
+            loadAppointments();
+            showNotification('Appointment marked Completed', 'success');
+
+            // Go to invoices and auto-create/focus the linked invoice.
+            window.location.href = `invoices.html?fromAppointment=${encodeURIComponent(appointmentId)}`;
+        }
+        
+        function markNoShow(appointmentId) {
+            const appointments = getAppointments();
+            const apt = appointments.find(a => a.id === appointmentId);
+            if (!apt) return;
+            if (apt.status === 'canceled') { showNotification('Canceled appointments cannot be marked No Show', 'info'); return; }
+            apt.status = 'no-show';
+            apt.noShowAt = new Date().toISOString();
+            localStorage.setItem('appointments', JSON.stringify(appointments));
+            loadAppointments();
+            showNotification('Marked as No Show', 'success');
+        }
+
+        function updateAppointmentStatus(appointmentId) {
+            const appointments = getAppointments();
+            const apt = appointments.find(a => a.id === appointmentId);
+            if (!apt) return;
+
+            const statusOrder = ['scheduled','confirmed','in-progress','completed'];
+            const terminal = ['completed','no-show','canceled'];
+            const current = (apt.status || 'scheduled');
+            if (terminal.includes(current)) {
+                showNotification(`Status is ${formatStatusLabel(current)} (no further changes)`, 'info');
+                return;
+            }
+            let idx = statusOrder.indexOf(current);
+            if (idx < 0) idx = 0;
+            const next = statusOrder[Math.min(idx + 1, statusOrder.length - 1)];
+
+            const msg = `Update status to ${formatStatusLabel(next)}?`;
+            const proceed = window.dpConfirm ? dpConfirm(msg) : confirm(msg);
+            if (!proceed) return;
+
+            apt.status = next;
+            localStorage.setItem('appointments', JSON.stringify(appointments));
+            loadAppointments();
+            showNotification(`Status updated to ${formatStatusLabel(next)}`, 'success');
+
+            // When an appointment is marked completed, take the user directly to invoices
+            // so they can review/edit the invoice amount and collect payment.
+            if (next === 'completed') {
+                window.location.href = `invoices.html?fromAppointment=${encodeURIComponent(appointmentId)}`;
+                return;
+            }
+
+            // Trigger customer notification (email via mailto) if enabled
+            try {
+                if (!window.NotificationCenter) return;
+
+                const customer = findCustomerByName(apt.customer || apt.customerName || '') || {};
+                const invoices = JSON.parse(localStorage.getItem('invoices') || '[]');
+                const linked = invoices.find(i => i.appointmentId === apt.id) || {};
+
+                const data = {
+                    customerName: (apt.customer || apt.customerName || `${customer.firstName || ''} ${customer.lastName || ''}`).trim() || 'Customer',
+                    email: customer.email || '',
+                    date: formatDate(apt.date),
+                    time: formatTime(apt.time),
+                    service: (() => { try { const svc = (typeof getServiceById==='function') ? getServiceById(apt.service) : null; return (svc && svc.name) ? svc.name : ((typeof getServiceName==='function') ? getServiceName(apt.service) : (apt.serviceName || apt.service || 'Service')); } catch(e){ return (apt.serviceName || apt.service || 'Service'); } })(),
+                    total: typeof apt.totalPrice !== 'undefined' ? `$${Number(apt.totalPrice || 0).toFixed(2)}` : '',
+                    invoiceNumber: linked.invoiceNumber || ''
+                };
+
+                if (next === 'scheduled') window.NotificationCenter.trigger('confirmation', data);
+                if (next === 'completed') window.NotificationCenter.trigger('ready', data);
+                if (next === 'paid') window.NotificationCenter.trigger('receipt', data);
+            } catch (e) {
+                // silent fail
+            }
+        }
+
+function deleteAppointment(appointmentId) {
+            const appointments = getAppointments();
+            const apt = appointments.find(a => String(a.id) === String(appointmentId));
+            const st = String(apt?.status || 'scheduled').toLowerCase();
+            if (['completed','paid'].includes(st)) {
+                showNotification('Completed/paid appointments are read-only.', 'info');
+                return;
+            }
+            if (!(window.dpConfirm ? dpConfirm('Cancel this appointment?') : confirm('Cancel this appointment?'))) return;
+            const updated = appointments.map(apt => {
+                if (String(apt.id) !== String(appointmentId)) return apt;
+                return { ...apt, status: 'canceled', canceledAt: new Date().toISOString() };
+            });
+            localStorage.setItem('appointments', JSON.stringify(updated));
+            // Refresh UI immediately so calendar dots update right away
+            loadAppointments();
+            try { generateCalendar(); } catch (e) {}
+            try { loadDailyAppointments(); } catch (e) {}
+            try { updateAppointmentStats(); } catch (e) {}
+            showNotification('Appointment canceled.', 'success');
+        }
+
+        function animateAppointmentElements() {
+            anime({
+                targets: '.appointment-card',
+                translateY: [20, 0],
+                opacity: [0, 1],
+                delay: anime.stagger(50),
+                duration: 400,
+                easing: 'easeOutCubic'
+            });
+        }
+
+        // Data management functions
+        function getAppointments() {
+            return JSON.parse(localStorage.getItem('appointments') || '[]');
+        }
+
+        function saveAppointment(appointment) {
+            const appointments = getAppointments();
+            appointments.push(appointment);
+            localStorage.setItem('appointments', JSON.stringify(appointments));
+        }
+
+        function getCustomers() {
+            return JSON.parse(localStorage.getItem('customers') || '[]');
+        }
+
+        // Customer profile linking
+        function findCustomerByName(fullName) {
+            if (!fullName) return null;
+            const name = fullName.trim().toLowerCase();
+            const customers = getCustomers();
+
+            // Prefer exact match on "First Last"
+            let match = customers.find(c => `${c.firstName} ${c.lastName}`.trim().toLowerCase() === name);
+            if (match) return match;
+
+            // Fallback: contains first and last
+            match = customers.find(c => {
+                const fn = (c.firstName || '').trim().toLowerCase();
+                const ln = (c.lastName || '').trim().toLowerCase();
+                return fn && ln && name.includes(fn) && name.includes(ln);
+            });
+            return match || null;
+        }
+
+        function customerLink(fullName) {
+            const customer = findCustomerByName(fullName);
+            if (!customer) return `<span>${escapeHtml(fullName)}</span>`;
+            return `<a href="customer-profile.html?id=${encodeURIComponent(customer.id)}" class="text-blue-700 hover:underline">${escapeHtml(fullName)}</a>`;
+        }
+
+        function escapeHtml(str) {
+            return String(str ?? '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+        }
+
+        function saveCustomer(customer) {
+            const customers = getCustomers();
+            customers.push(customer);
+            localStorage.setItem('customers', JSON.stringify(customers));
+        }
+
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm ${
+                type === 'success' ? 'bg-emerald-500 text-white' : 
+                type === 'error' ? 'bg-red-500 text-white' : 
+                'bg-blue-500 text-white'
+            }`;
+            notification.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <i class="fas ${
+                        type === 'success' ? 'fa-check-circle' :
+                        type === 'error' ? 'fa-exclamation-circle' :
+                        'fa-info-circle'
+                    }"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+
+            document.body.appendChild(notification);
+
+            anime({
+                targets: notification,
+                translateX: [300, 0],
+                opacity: [0, 1],
+                duration: 300,
+                easing: 'easeOutCubic'
+            });
+
+            setTimeout(() => {
+                anime({
+                    targets: notification,
+                    translateX: [0, 300],
+                    opacity: [1, 0],
+                    duration: 300,
+                    easing: 'easeInCubic',
+                    complete: () => {
+                        document.body.removeChild(notification);
+                    }
+                });
+            }, 3000);
+        }
+
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+                
+                anime({
+                    targets: modal.querySelector('.bg-white'),
+                    scale: [0.8, 1],
+                    opacity: [0, 1],
+                    duration: 300,
+                    easing: 'easeOutCubic'
+                });
+            }
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                anime({
+                    targets: modal.querySelector('.bg-white'),
+                    scale: [1, 0.8],
+                    opacity: [1, 0],
+                    duration: 200,
+                    easing: 'easeInCubic',
+                    complete: function() {
+                        modal.classList.add('hidden');
+                        document.body.style.overflow = 'auto';
+                    }
+                });
+            }
+        }
+
+        // Check for selected customer from other pages
+        function checkSelectedCustomer() {
+            const selectedCustomerId = localStorage.getItem('selectedCustomerId');
+            if (selectedCustomerId) {
+                const customers = getCustomers();
+                const customer = customers.find(c => c.id === selectedCustomerId);
+                if (customer) {
+                    document.getElementById('customerSearch').value = `${customer.firstName} ${customer.lastName}`;
+                }
+                localStorage.removeItem('selectedCustomerId');
+            }
+        }
+
+        // Initialize selected customer check
+        setTimeout(checkSelectedCustomer, 100);
+    
+        // Auto-open modal when arriving from dashboard quick actions
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+
+            // Auto-open new appointment modal (from dashboard quick action)
+            if (params.get('new') === 'true') {
+                if (typeof openModal === 'function') openNewAppointmentModal();
+                params.delete('new');
+            }
+
+            // Optional status filter (from dashboard pipeline)
+            const status = params.get('status');
+            if (status) {
+                if (typeof setStatusFilter === 'function') setStatusFilter(status);
+                params.delete('status');
+            }
+
+            // Clean URL so refresh doesn't repeat the action
+            const qs = params.toString();
+            const newUrl = window.location.pathname + (qs ? `?${qs}` : '');
+            window.history.replaceState({}, document.title, newUrl);
+        });
+
+
+        // --- Appointment info popup (Appointments page) ---
+        function openAppointmentInfo(appointmentId){
+            const appointments = getAppointments();
+            const customers = (typeof getCustomers === 'function') ? getCustomers() : JSON.parse(localStorage.getItem('customers') || '[]');
+
+            const appointment = appointments.find(a => String(a.id) === String(appointmentId));
+            if (!appointment) { showNotification('Appointment not found', 'error'); return; }
+
+            const custName = String(appointment.customer || '').trim();
+            const customer = customers.find(c => (`${c.firstName || ''} ${c.lastName || ''}`.trim() === custName) || String(c.id) === String(appointment.customerId || ''));
+
+            const dateKey = normalizeDateKey(appointment.date) || '';
+            const time = appointment.time || '';
+            const service = getServiceName(appointment.service) || appointment.service || '';
+            const status = String(appointment.status || 'scheduled').toLowerCase();
+
+            const phone = customer?.phone || '';
+            const email = customer?.email || '';
+            const vehicle = [customer?.vehicleYear, customer?.vehicleMake, customer?.vehicleModel].filter(Boolean).join(' ') || (customer?.vehicle || '');
+
+            const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val || '—'; };
+            setText('aptInfoCustomer', custName || 'Unknown');
+            setText('aptInfoWhen', [dateKey, time].filter(Boolean).join(' • '));
+            setText('aptInfoService', service);
+            setText('aptInfoStatus', status.charAt(0).toUpperCase() + status.slice(1));
+            setText('aptInfoPhone', phone);
+            setText('aptInfoEmail', email);
+            setText('aptInfoVehicle', vehicle);
+            setText('aptInfoNotes', appointment.notes || '');
+
+            const editBtn = document.getElementById('aptInfoEditBtn');
+            if (editBtn){
+                editBtn.onclick = () => {
+                    closeAppointmentInfo();
+                    openEditAppointment(appointmentId);
+                };
+            }
+
+            const modal = document.getElementById('appointmentInfoModal');
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeAppointmentInfo(){
+            const modal = document.getElementById('appointmentInfoModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function focusAppointmentFromHash(){
+            const h = (window.location.hash || '').replace('#','');
+            if (!h.startsWith('appointment=')) return;
+            const id = decodeURIComponent(h.split('=')[1] || '');
+            if (!id) return;
+            let tries = 0;
+            const t = setInterval(() => {
+                tries++;
+                const el = document.getElementById('apt-' + id);
+                if (el){
+                    el.classList.add('ring-2','ring-blue-500');
+                    el.scrollIntoView({behavior:'smooth', block:'center'});
+                    clearInterval(t);
+                }
+                if (tries > 15) clearInterval(t);
+            }, 200);
+        }
+
+</script>
+</body>
+</html>

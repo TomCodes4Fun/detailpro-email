@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings - DetailPro CRM</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .nav-bottom { bottom: 0; left: 0; right: 0; z-index: 50; }
+    .content-padding { padding-bottom: 80px; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen pb-24">
+
+  <!-- Header -->
+  <header class="bg-white shadow-sm sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+          <i class="fas fa-cog text-white"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-semibold text-gray-900">Settings</h1>
+          <p class="text-sm text-gray-500">Business profile, team, plan & backups</p>
+        </div>
+      </div>
+      <a href="index.html" class="text-gray-600 hover:text-blue-600">
+        <i class="fas fa-home text-xl"></i>
+      </a>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-4 py-6 space-y-6">
+
+    <!-- Business profile -->
+    <div class="bg-white rounded-2xl shadow-sm p-5">
+      <h2 class="text-lg font-semibold text-gray-900">Business profile</h2>
+      <p class="text-sm text-gray-500 mt-1">This name appears on the dashboard, invoices, and customer emails.</p>
+      <div class="mt-4 grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm text-gray-700 mb-1">Business name</label>
+          <input id="businessNameInput" type="text" class="w-full border rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div class="flex items-end">
+          <span id="planBadge" class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700">
+            <i class="fas fa-star mr-2 text-amber-500"></i><span id="planBadgeText">Free plan</span>
+          </span>
+        </div>
+      </div>
+      <div class="mt-4">
+        <button id="saveProfileBtn" class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700">
+          <i class="fas fa-save mr-2"></i>Save
+        </button>
+      </div>
+    </div>
+
+    <!-- Team -->
+    <div class="bg-white rounded-2xl shadow-sm p-5">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900">Team</h2>
+          <p class="text-sm text-gray-500 mt-1">Add staff so they can use the schedule and customer pages. Only Admins can delete records or edit prices.</p>
+        </div>
+      </div>
+      <div id="teamList" class="mt-4 space-y-2"></div>
+      <div class="mt-4 grid sm:grid-cols-2 gap-2">
+        <input id="newStaffName" type="text" placeholder="Full name" class="border rounded-lg px-3 py-2 text-sm">
+        <input id="newStaffEmail" type="email" placeholder="Email address" class="border rounded-lg px-3 py-2 text-sm">
+        <input id="newStaffPass" type="text" placeholder="Temporary password (8+ chars)" class="border rounded-lg px-3 py-2 text-sm">
+        <select id="newStaffRole" class="border rounded-lg px-3 py-2 text-sm">
+          <option value="staff">Staff</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <div class="mt-2">
+        <button id="addStaffBtn" class="px-4 py-2 bg-gray-900 text-white rounded-xl hover:bg-black">
+          <i class="fas fa-user-plus mr-2"></i>Add team member
+        </button>
+      </div>
+      <div class="mt-3 text-xs text-gray-500">
+        Currently signed in as <span id="currentUserLabel" class="font-medium"></span>.
+        Team members log in at <span class="font-mono bg-gray-100 px-1 rounded">login.html</span> with their email and temporary password.
+      </div>
+    </div>
+
+    <!-- Data backup -->
+    <div class="bg-white rounded-2xl shadow-sm p-5">
+      <h2 class="text-lg font-semibold text-gray-900">Data backup</h2>
+      <p class="text-sm text-gray-500 mt-1">
+        All data currently lives in this browser only. Export a backup regularly, especially before clearing your browser data or switching devices.
+      </p>
+      <div class="mt-4 flex flex-wrap gap-2">
+        <button id="exportBtn" class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700">
+          <i class="fas fa-download mr-2"></i>Export backup (.json)
+        </button>
+        <label class="px-4 py-2 bg-gray-100 text-gray-800 rounded-xl hover:bg-gray-200 cursor-pointer">
+          <i class="fas fa-upload mr-2"></i>Restore from backup
+          <input id="importInput" type="file" accept="application/json" class="hidden">
+        </label>
+      </div>
+      <div class="mt-3 text-xs text-amber-600">
+        <i class="fas fa-triangle-exclamation mr-1"></i>Restoring overwrites current customers, appointments, invoices, and services with the contents of the backup file.
+      </div>
+    </div>
+
+    <!-- Email delivery shortcut -->
+    <div class="bg-white rounded-2xl shadow-sm p-5">
+      <h2 class="text-lg font-semibold text-gray-900">Email delivery</h2>
+      <p class="text-sm text-gray-500 mt-1">Templates and automated sending are configured on the Notifications page.</p>
+      <a href="notifications.html" class="inline-flex items-center mt-3 text-blue-600 hover:text-blue-800 font-medium">
+        Open notification settings <i class="fas fa-arrow-right ml-2"></i>
+      </a>
+    </div>
+
+  </main>
+
+  <!-- Bottom Navigation -->
+  <nav class="fixed nav-bottom bg-white border-t border-gray-200 p-4">
+    <div class="flex justify-around max-w-md mx-auto">
+      <a href="index.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+        <i class="fas fa-home text-xl mb-1"></i>
+        <span class="text-xs">Dashboard</span>
+      </a>
+      <a href="customers.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+        <i class="fas fa-users text-xl mb-1"></i>
+        <span class="text-xs">Customers</span>
+      </a>
+      <a href="appointments.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+        <i class="fas fa-calendar text-xl mb-1"></i>
+        <span class="text-xs">Schedule</span>
+      </a>
+      <a href="invoices.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+        <i class="fas fa-file-invoice-dollar text-xl mb-1"></i>
+        <span class="text-xs">Invoices</span>
+      </a>
+      <a href="settings.html" class="flex flex-col items-center text-blue-600">
+        <i class="fas fa-cog text-xl mb-1"></i>
+        <span class="text-xs">Settings</span>
+      </a>
+    </div>
+  </nav>
+
+  <script src="config.js"></script>
+  <script src="api-client.js"></script>
+  <script src="main-enhanced.js"></script>
+  <script>
+    let _team = [];
+
+    function renderTeam(team) {
+      const session = window.dpAuth?.getSession();
+      const currentUserId = session?.user?.id;
+      const list = document.getElementById('teamList');
+      list.innerHTML = '';
+      team.forEach(u => {
+        const isSelf = u.id === currentUserId;
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between border rounded-xl px-3 py-2';
+        row.innerHTML = `
+          <div>
+            <span class="font-medium text-gray-900">${u.name}</span>
+            <span class="ml-2 text-xs px-2 py-0.5 rounded-full ${u.role === 'admin' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}">${u.role}</span>
+            <span class="ml-1 text-xs text-gray-400">${u.email}</span>
+            ${isSelf ? '<span class="ml-2 text-xs text-green-600"><i class="fas fa-circle-check"></i> you</span>' : ''}
+          </div>
+          ${!isSelf ? `<button data-id="${u.id}" class="removeStaffBtn text-red-400 hover:text-red-600 text-sm"><i class="fas fa-trash"></i></button>` : ''}`;
+        list.appendChild(row);
+      });
+
+      list.querySelectorAll('.removeStaffBtn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!confirm('Remove this team member?')) return;
+          try {
+            await window.dpTeamAPI.remove(btn.getAttribute('data-id'));
+            await loadTeam();
+          } catch (e) { alert(e.message); }
+        });
+      });
+    }
+
+    async function loadTeam() {
+      try {
+        const { team, account } = await window.dpTeamAPI.getTeam();
+        _team = team;
+        renderTeam(team);
+        // Update session account in case plan changed
+        const session = window.dpAuth?.getSession();
+        if (session) {
+          window.dpAuth.setSession(window.dpAuth.getToken(), session.user, account);
+          window.DP_ACCOUNT = { ...window.DP_ACCOUNT, ...account };
+        }
+      } catch (e) {
+        console.warn('Could not load team:', e);
+      }
+    }
+
+    function loadProfile() {
+      const account = window.DP_ACCOUNT || {};
+      document.getElementById('businessNameInput').value = account.businessName || '';
+      document.getElementById('planBadgeText').textContent =
+        account.plan === 'pro' ? 'Pro plan' : 'Free plan';
+      // Show logged-in user email under team section
+      const session = window.dpAuth?.getSession();
+      const label = document.getElementById('currentUserLabel');
+      if (label && session?.user) label.textContent = `${session.user.name} (${session.user.email})`;
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      loadProfile();
+      await loadTeam();
+
+      // Business profile save
+      document.getElementById('saveProfileBtn').addEventListener('click', async () => {
+        const name = document.getElementById('businessNameInput').value.trim();
+        if (!name) { alert('Business name cannot be empty.'); return; }
+        const btn = document.getElementById('saveProfileBtn');
+        btn.disabled = true; btn.textContent = 'Saving…';
+        try {
+          const account = await window.dpTeamAPI.updateBusinessName(name);
+          await window.dpAuth.refreshSession();
+          window.DP_ACCOUNT = { ...window.DP_ACCOUNT, businessName: account.businessName };
+          alert('Business profile saved!');
+        } catch (e) {
+          alert('Could not save: ' + e.message);
+        } finally {
+          btn.disabled = false; btn.textContent = 'Save';
+          // Re-add the icon since we replaced innerHTML
+          btn.innerHTML = '<i class="fas fa-save mr-2"></i>Save';
+        }
+      });
+
+      // Add team member
+      document.getElementById('addStaffBtn').addEventListener('click', async () => {
+        const email = document.getElementById('newStaffEmail').value.trim();
+        const name = document.getElementById('newStaffName').value.trim();
+        const role = document.getElementById('newStaffRole').value;
+        const pass = document.getElementById('newStaffPass').value;
+        if (!email || !name || !pass) { alert('Email, name and a temporary password are required.'); return; }
+        if (pass.length < 8) { alert('Temporary password must be at least 8 characters.'); return; }
+        try {
+          await window.dpTeamAPI.add(email, name, role, pass);
+          document.getElementById('newStaffEmail').value = '';
+          document.getElementById('newStaffName').value = '';
+          document.getElementById('newStaffPass').value = '';
+          await loadTeam();
+        } catch (e) { alert(e.message); }
+      });
+
+      // Export backup
+      document.getElementById('exportBtn').addEventListener('click', () => {
+        window.dpSync?.push(); // flush pending writes first
+        window.dpExportAllData();
+      });
+
+      // Restore from backup
+      document.getElementById('importInput').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async () => {
+          try {
+            const payload = JSON.parse(reader.result);
+            if (!confirm('This will overwrite current data with the backup file. Continue?')) return;
+            const result = window.dpImportAllData(payload);
+            if (result.ok) {
+              // Push restored data to server immediately
+              await window.dpSync?.push();
+              alert('Backup restored and synced to server! Reloading…');
+              window.location.reload();
+            } else {
+              alert('Could not restore backup: ' + result.error);
+            }
+          } catch (err) { alert('That file is not valid JSON.'); }
+        };
+        reader.readAsText(file);
+      });
+    });
+  </script>
+</body>
+</html>

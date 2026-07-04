@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notifications - DetailPro CRM</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+      .nav-bottom { bottom: 0; left: 0; right: 0; z-index: 50; }
+    .content-padding { padding-bottom: 80px; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen pb-24">
+
+  <!-- Header -->
+  <header class="bg-white shadow-sm sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+          <i class="fas fa-bell text-white"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-semibold text-gray-900">Notifications</h1>
+          <p class="text-sm text-gray-500">Email templates and automation</p>
+        </div>
+      </div>
+      <a href="index.html" class="text-gray-600 hover:text-blue-600">
+        <i class="fas fa-home text-xl"></i>
+      </a>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-4 py-6 space-y-6">
+
+    <div class="bg-white rounded-2xl shadow-sm p-5">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900">Automation</h2>
+          <p class="text-sm text-gray-500 mt-1">When enabled, the app will open your email client with a pre-filled message when key events happen (confirmations, ready notices, receipts).</p>
+        </div>
+        <label class="inline-flex items-center cursor-pointer select-none">
+          <input id="enabledToggle" type="checkbox" class="sr-only peer">
+          <div class="w-12 h-7 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 relative transition">
+            <div class="w-5 h-5 bg-white rounded-full absolute top-1 left-1 peer-checked:translate-x-5 transition"></div>
+          </div>
+        </label>
+      </div>
+
+      <div class="mt-5 grid md:grid-cols-3 gap-3">
+        <label class="flex items-center gap-3 p-3 border rounded-xl hover:bg-gray-50 cursor-pointer">
+          <input id="confirmationToggle" type="checkbox" class="w-4 h-4">
+          <div>
+            <div class="font-medium text-gray-900">Appointment Confirmation</div>
+            <div class="text-xs text-gray-500">Triggers when status becomes Scheduled</div>
+          </div>
+        </label>
+
+        <label class="flex items-center gap-3 p-3 border rounded-xl hover:bg-gray-50 cursor-pointer">
+          <input id="readyToggle" type="checkbox" class="w-4 h-4">
+          <div>
+            <div class="font-medium text-gray-900">Vehicle Ready</div>
+            <div class="text-xs text-gray-500">Triggers when status becomes Completed</div>
+          </div>
+        </label>
+
+        <label class="flex items-center gap-3 p-3 border rounded-xl hover:bg-gray-50 cursor-pointer">
+          <input id="receiptToggle" type="checkbox" class="w-4 h-4">
+          <div>
+            <div class="font-medium text-gray-900">Payment Receipt</div>
+            <div class="text-xs text-gray-500">Triggers when invoice marked Paid</div>
+          </div>
+        </label>
+      </div>
+
+      <div class="mt-4 text-xs text-gray-500">
+        Tip: If the customer has no email saved, the message will be copied to your clipboard instead.
+      </div>
+
+      <div class="mt-5 border-t pt-5">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h3 class="font-medium text-gray-900">Send automatically (no popup)</h3>
+            <p class="text-sm text-gray-500 mt-1">By default, emails open in your own mail app for you to review and send. Turn this on to send automatically through the included email server instead — see <span class="font-mono bg-gray-100 px-1 rounded">server/</span> for setup.</p>
+          </div>
+          <label class="inline-flex items-center cursor-pointer select-none">
+            <input id="autoSendToggle" type="checkbox" class="sr-only peer">
+            <div class="w-12 h-7 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 relative transition">
+              <div class="w-5 h-5 bg-white rounded-full absolute top-1 left-1 peer-checked:translate-x-5 transition"></div>
+            </div>
+          </label>
+        </div>
+        <div class="mt-3">
+          <label class="block text-sm text-gray-700 mb-1">Email server URL</label>
+          <input id="apiBaseUrlInput" type="text" placeholder="https://your-app.onrender.com" class="w-full md:w-80 border rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div class="mt-3">
+          <label class="block text-sm text-gray-700 mb-1">API key (optional, must match EMAIL_API_KEY on the server)</label>
+          <input id="apiKeyInput" type="text" placeholder="leave blank if not set" class="w-full md:w-80 border rounded-lg px-3 py-2 text-sm">
+        </div>
+      </div>
+
+      <div class="mt-5 flex gap-2">
+        <button id="saveSettingsBtn" class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700">
+          <i class="fas fa-save mr-2"></i>Save
+        </button>
+        <button id="resetBtn" class="px-4 py-2 bg-gray-100 text-gray-800 rounded-xl hover:bg-gray-200">
+          Reset to defaults
+        </button>
+      </div>
+    </div>
+
+    <!-- Templates -->
+    <div class="bg-white rounded-2xl shadow-sm p-5">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900">Templates</h2>
+          <p class="text-sm text-gray-500 mt-1">Use placeholders like <span class="font-mono bg-gray-100 px-1 rounded">{{customerName}}</span>, <span class="font-mono bg-gray-100 px-1 rounded">{{date}}</span>, <span class="font-mono bg-gray-100 px-1 rounded">{{time}}</span>, <span class="font-mono bg-gray-100 px-1 rounded">{{service}}</span>, <span class="font-mono bg-gray-100 px-1 rounded">{{total}}</span>, <span class="font-mono bg-gray-100 px-1 rounded">{{invoiceNumber}}</span>.</p>
+        </div>
+      </div>
+
+      <div class="mt-5 space-y-6">
+        <section class="border rounded-2xl p-4">
+          <div class="flex items-center justify-between">
+            <h3 class="font-semibold text-gray-900">Appointment Confirmation</h3>
+            <button class="text-sm text-blue-600 hover:text-blue-700" onclick="previewTemplate('confirmation')">
+              <i class="fas fa-eye mr-1"></i>Preview
+            </button>
+          </div>
+          <div class="mt-3 grid gap-3">
+            <div>
+              <label class="text-sm text-gray-600">Subject</label>
+              <input id="confirmationSubject" class="w-full mt-1 px-3 py-2 border rounded-xl" />
+            </div>
+            <div>
+              <label class="text-sm text-gray-600">Body</label>
+              <textarea id="confirmationBody" rows="6" class="w-full mt-1 px-3 py-2 border rounded-xl"></textarea>
+            </div>
+          </div>
+        </section>
+
+        <section class="border rounded-2xl p-4">
+          <div class="flex items-center justify-between">
+            <h3 class="font-semibold text-gray-900">Vehicle Ready</h3>
+            <button class="text-sm text-blue-600 hover:text-blue-700" onclick="previewTemplate('ready')">
+              <i class="fas fa-eye mr-1"></i>Preview
+            </button>
+          </div>
+          <div class="mt-3 grid gap-3">
+            <div>
+              <label class="text-sm text-gray-600">Subject</label>
+              <input id="readySubject" class="w-full mt-1 px-3 py-2 border rounded-xl" />
+            </div>
+            <div>
+              <label class="text-sm text-gray-600">Body</label>
+              <textarea id="readyBody" rows="6" class="w-full mt-1 px-3 py-2 border rounded-xl"></textarea>
+            </div>
+          </div>
+        </section>
+
+        <section class="border rounded-2xl p-4">
+          <div class="flex items-center justify-between">
+            <h3 class="font-semibold text-gray-900">Payment Receipt</h3>
+            <button class="text-sm text-blue-600 hover:text-blue-700" onclick="previewTemplate('receipt')">
+              <i class="fas fa-eye mr-1"></i>Preview
+            </button>
+          </div>
+          <div class="mt-3 grid gap-3">
+            <div>
+              <label class="text-sm text-gray-600">Subject</label>
+              <input id="receiptSubject" class="w-full mt-1 px-3 py-2 border rounded-xl" />
+            </div>
+            <div>
+              <label class="text-sm text-gray-600">Body</label>
+              <textarea id="receiptBody" rows="6" class="w-full mt-1 px-3 py-2 border rounded-xl"></textarea>
+            </div>
+          </div>
+        </section>
+
+        <div class="flex gap-2">
+          <button id="saveTemplatesBtn" class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700">
+            <i class="fas fa-save mr-2"></i>Save Templates
+          </button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Plan (Dev toggle until Stripe is added) -->
+    <div class="bg-white rounded-2xl shadow-sm p-5" data-admin-only="true">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900">Plan</h2>
+          <p class="text-sm text-gray-500 mt-1">Dev toggle for testing Free vs Pro features (billing not enabled yet).</p>
+        </div>
+        <div class="text-sm">
+          <span class="text-gray-500">Current:</span>
+          <span id="planBadge" class="ml-2 inline-flex items-center px-2 py-1 rounded-full bg-gray-100 text-gray-800 font-medium">free</span>
+        </div>
+      </div>
+      <div class="mt-4 flex gap-2">
+        <button id="togglePlanBtn" class="px-4 py-2 bg-gray-900 text-white rounded-xl hover:bg-black">
+          Toggle Free / Pro
+        </button>
+      </div>
+      <div class="mt-3 text-xs text-gray-500">
+        Pro unlocks: automated email reminders (appointment modal), staff (later can be Pro-gated), and more.
+      </div>
+    </div>
+
+    <!-- Staff Users (Admin only) -->
+    <div id="staff" class="bg-white rounded-2xl shadow-sm p-5" data-admin-only="true">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900">Staff Users</h2>
+          <p class="text-sm text-gray-500 mt-1">Add staff who can schedule and manage appointments. (Login/auth will be added later.)</p>
+        </div>
+      </div>
+
+      <div class="mt-4 flex flex-col md:flex-row gap-3">
+        <input id="staffName" class="flex-1 px-3 py-2 border rounded-xl" placeholder="Staff name (e.g., Alex)" />
+        <button id="addStaffBtn" class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700">
+          <i class="fas fa-user-plus mr-2"></i>Add Staff
+        </button>
+      </div>
+
+      <div class="mt-4">
+        <div class="text-sm font-medium text-gray-900 mb-2">Users</div>
+        <div id="usersList" class="space-y-2"></div>
+        <div class="mt-3 text-xs text-gray-500">
+          Tip: Use the floating <span class="font-medium">Signed in as</span> switcher to test staff permissions.
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Bottom Navigation -->
+  <nav class="fixed nav-bottom bg-white border-t border-gray-200 p-4">
+        <div class="flex justify-around max-w-md mx-auto">
+            <a href="index.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-home text-xl mb-1"></i>
+                <span class="text-xs">Dashboard</span>
+            </a>
+            <a href="customers.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-users text-xl mb-1"></i>
+                <span class="text-xs">Customers</span>
+            </a>
+            <a href="appointments.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-calendar text-xl mb-1"></i>
+                <span class="text-xs">Schedule</span>
+            </a>
+            <a href="invoices.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-file-invoice-dollar text-xl mb-1"></i>
+                <span class="text-xs">Invoices</span>
+            </a>
+            <a href="services.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-concierge-bell text-xl mb-1"></i>
+                <span class="text-xs">Services</span>
+            </a>
+            <a href="notifications.html" class="flex flex-col items-center text-blue-600">
+                <i class="fas fa-bell text-xl mb-1"></i>
+                <span class="text-xs">Alerts</span>
+            </a>
+        </div>
+    </nav>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="api-client.js"></script>
+  <script src="main-enhanced.js"></script>
+  <script src="notifications.js"></script>
+  <script>
+    function loadUI() {
+      const s = window.NotificationCenter.getSettings();
+      document.getElementById('enabledToggle').checked = !!s.enabled;
+      document.getElementById('confirmationToggle').checked = !!s.confirmation;
+      document.getElementById('readyToggle').checked = !!s.ready;
+      document.getElementById('receiptToggle').checked = !!s.receipt;
+      document.getElementById('autoSendToggle').checked = !!s.autoSendServer;
+      document.getElementById('apiBaseUrlInput').value = s.apiBaseUrl || 'http://localhost:3333';
+      document.getElementById('apiKeyInput').value = s.apiKey || '';
+
+      const t = window.NotificationCenter.getTemplates();
+      document.getElementById('confirmationSubject').value = t.confirmation.subject || '';
+      document.getElementById('confirmationBody').value = t.confirmation.body || '';
+      document.getElementById('readySubject').value = t.ready.subject || '';
+      document.getElementById('readyBody').value = t.ready.body || '';
+      document.getElementById('receiptSubject').value = t.receipt.subject || '';
+      document.getElementById('receiptBody').value = t.receipt.body || '';
+    }
+
+    function previewTemplate(type) {
+      const sample = {
+        customerName: "Alex Rivera",
+        date: "Jan 10, 2026",
+        time: "10:30 AM",
+        service: "Full Detail",
+        total: "$249.00",
+        invoiceNumber: "INV-1007",
+        email: "alex@example.com"
+      };
+      const email = window.NotificationCenter.buildEmail(type, sample);
+      alert("SUBJECT:\n" + email.subject + "\n\nBODY:\n" + email.body);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Wire the dev-only plan toggle first so it works even if other scripts error.
+      try { wirePlanToggle(); } catch(e) {}
+
+      // Load notifications UI (guarded so one error doesn't break the rest of the page)
+      try { loadUI(); } catch(e) { console.warn('Notifications UI failed to load:', e); }
+
+      try {
+        document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+          window.NotificationCenter.saveSettings({
+            enabled: document.getElementById('enabledToggle').checked,
+            confirmation: document.getElementById('confirmationToggle').checked,
+            ready: document.getElementById('readyToggle').checked,
+            receipt: document.getElementById('receiptToggle').checked,
+            autoSendServer: document.getElementById('autoSendToggle').checked,
+            apiBaseUrl: document.getElementById('apiBaseUrlInput').value.trim(),
+            apiKey: document.getElementById('apiKeyInput').value.trim()
+          });
+          alert('Notification settings saved!');
+        });
+      } catch(e) { console.warn(e); }
+
+      try {
+        document.getElementById('resetBtn').addEventListener('click', () => {
+          localStorage.removeItem('notificationSettings');
+          localStorage.removeItem('notificationTemplates');
+          try { loadUI(); } catch(e) {}
+          alert('Reset to default templates and settings.');
+        });
+      } catch(e) { console.warn(e); }
+
+      try {
+        document.getElementById('saveTemplatesBtn').addEventListener('click', () => {
+          window.NotificationCenter.saveTemplates({
+            confirmation: {
+              subject: document.getElementById('confirmationSubject').value,
+              body: document.getElementById('confirmationBody').value
+            },
+            ready: {
+              subject: document.getElementById('readySubject').value,
+              body: document.getElementById('readyBody').value
+            },
+            receipt: {
+              subject: document.getElementById('receiptSubject').value,
+              body: document.getElementById('receiptBody').value
+            }
+          });
+          alert('Templates saved!');
+        });
+      } catch(e) { console.warn(e); }
+
+
+
+    // ---- Plan (dev toggle) ----
+    function refreshPlanBadge(){
+      try {
+        const badge = document.getElementById('planBadge');
+        const plan = (window.DP_ACCOUNT && window.DP_ACCOUNT.plan) ? window.DP_ACCOUNT.plan : 'free';
+        if (badge) {
+          badge.textContent = plan;
+          badge.className = 'ml-2 inline-flex items-center px-2 py-1 rounded-full font-medium ' +
+            (plan === 'pro'
+              ? 'bg-emerald-50 text-emerald-800 border border-emerald-100'
+              : 'bg-gray-100 text-gray-800');
+        }
+      } catch(e) {}
+    }
+
+    function wirePlanToggle(){
+      try {
+        if (typeof window.dpIsAdmin === 'function' && !window.dpIsAdmin()) return;
+        const btn = document.getElementById('togglePlanBtn');
+        if (!btn) return;
+        refreshPlanBadge();
+        btn.addEventListener('click', () => {
+          try {
+            const key = 'dp_account_v1';
+            const acc = JSON.parse(localStorage.getItem(key) || '{}');
+            const cur = (acc.plan || 'free');
+            const next = cur === 'pro' ? 'free' : 'pro';
+            acc.plan = next;
+            localStorage.setItem(key, JSON.stringify(acc));
+            window.DP_ACCOUNT = acc;
+            refreshPlanBadge();
+            alert(`Plan set to: ${next.toUpperCase()}`);
+          } catch(e) {
+            alert('Unable to toggle plan.');
+          }
+        });
+      } catch(e) {}
+    }
+
+    // ---- Staff Users UI ----
+    function renderUsers(){
+      try {
+        if (typeof window.dpGetUsers !== 'function') return;
+        const users = window.dpGetUsers() || [];
+        const wrap = document.getElementById('usersList');
+        if (!wrap) return;
+        wrap.innerHTML = '';
+        users.forEach(u => {
+          const row = document.createElement('div');
+          row.className = 'flex items-center justify-between gap-3 p-3 border rounded-xl';
+          const left = document.createElement('div');
+          left.innerHTML = `
+            <div class="font-medium text-gray-900">${(u.name || (u.role==='admin'?'Owner':'Staff'))}</div>
+            <div class="text-xs text-gray-500">Role: <span class="font-mono">${u.role}</span></div>
+          `;
+          const right = document.createElement('div');
+
+          if (u.role === 'staff') {
+            const btn = document.createElement('button');
+            btn.className = 'px-3 py-1.5 text-sm bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200';
+            btn.innerHTML = '<i class="fas fa-trash mr-2"></i>Remove';
+            btn.addEventListener('click', () => {
+              if (!window.dpConfirm('Remove this staff user?')) return;
+              const res = window.dpRemoveUser(u.id);
+              if (!res.ok) alert(res.error || 'Unable to remove user.');
+              renderUsers();
+            });
+            right.appendChild(btn);
+          } else {
+            const pill = document.createElement('span');
+            pill.className = 'text-xs px-2 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-100';
+            pill.textContent = 'Owner';
+            right.appendChild(pill);
+          }
+
+          row.appendChild(left);
+          row.appendChild(right);
+          wrap.appendChild(row);
+        });
+      } catch(e) {}
+    }
+
+    function wireStaff(){
+      try {
+        if (typeof window.dpIsAdmin === 'function' && !window.dpIsAdmin()) return;
+        const addBtn = document.getElementById('addStaffBtn');
+        const nameInput = document.getElementById('staffName');
+        if (addBtn && nameInput && typeof window.dpAddStaffUser === 'function') {
+          addBtn.addEventListener('click', () => {
+            const name = nameInput.value || '';
+            const res = window.dpAddStaffUser(name);
+            if (!res.ok) {
+              alert(res.error || 'Unable to add staff.');
+              return;
+            }
+            nameInput.value = '';
+            renderUsers();
+          });
+          nameInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') addBtn.click();
+          });
+        }
+        renderUsers();
+      } catch(e) {}
+    }
+
+    wireStaff();
+    });
+  </script>
+</body>
+</html>

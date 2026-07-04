@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DetailPro CRM - Customers</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .font-display { font-family: 'Playfair Display', serif; }
+        .font-body { font-family: 'Inter', sans-serif; }
+        .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .btn-primary { background: linear-gradient(135deg, #3b82f6, #1e40af); }
+        .btn-accent { background: linear-gradient(135deg, #f97316, #ea580c); }
+        .text-primary { color: #1e293b; }
+        .text-accent { color: #f97316; }
+        .bg-primary { background-color: #1e293b; }
+        .bg-accent { background-color: #f97316; }
+        .nav-bottom { bottom: 0; left: 0; right: 0; z-index: 50; }
+        .content-padding { padding-bottom: 80px; }
+        .customer-card { transition: all 0.3s ease; }
+        .customer-card:hover { transform: translateY(-2px); }
+    </style>
+</head>
+<body class="bg-gray-50 font-body">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200 p-4">
+        <div class="flex items-center justify-between max-w-6xl mx-auto">
+            <div class="flex items-center space-x-3">
+                <img src="resources/logo.png" alt="DetailPro" class="w-8 h-8">
+                <h1 class="font-display text-xl font-bold text-primary">Customer Management</h1>
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="toggleArchivedBtn" onclick="toggleArchivedView()" class="px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 bg-white hover:bg-gray-50 transition-colors">
+                    <i class="fas fa-archive mr-2"></i>Archived
+                </button>
+                <button onclick="openNewCustomerModal()" class="btn-accent text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">
+                    <i class="fas fa-plus mr-2"></i>Add Customer
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto p-4 content-padding">
+        <!-- Search and Filters -->
+        <section class="mb-6">
+            <div class="bg-white p-4 rounded-xl card-shadow border border-gray-100">
+                <div class="flex flex-col md:flex-row gap-4">
+                    <div class="flex-1">
+                        <div class="relative">
+                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" id="customerSearch" placeholder="Search customers by name, phone, or vehicle..." 
+                                   class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <select id="sortBy" class="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="name">Sort by Name</option>
+                            <option value="date">Sort by Date</option>
+                            <option value="visits">Sort by Visits</option>
+                            <option value="spent">Sort by Spent</option>
+                        </select>
+                        <button onclick="toggleFilters()" class="px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                            <i class="fas fa-filter"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Filter Options (Hidden by default) -->
+                <div id="filterOptions" class="hidden mt-4 pt-4 border-t border-gray-200">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Vehicle Make</label>
+                            <select id="filterMake" class="w-full p-2 border border-gray-300 rounded-lg text-sm">
+                                <option value="">All Makes</option>
+                                <option value="BMW">BMW</option>
+                                <option value="Mercedes-Benz">Mercedes-Benz</option>
+                                <option value="Audi">Audi</option>
+                                <option value="Tesla">Tesla</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Customer Type</label>
+                            <select id="filterType" class="w-full p-2 border border-gray-300 rounded-lg text-sm">
+                                <option value="">All Types</option>
+                                <option value="regular">Regular</option>
+                                <option value="new">New</option>
+                                <option value="vip">VIP</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Last Visit</label>
+                            <select id="filterLastVisit" class="w-full p-2 border border-gray-300 rounded-lg text-sm">
+                                <option value="">Any Time</option>
+                                <option value="week">This Week</option>
+                                <option value="month">This Month</option>
+                                <option value="quarter">This Quarter</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end">
+                            <button onclick="applyFilters()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors">
+                                Apply Filters
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Customer Stats -->
+        <section class="mb-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-xl card-shadow border border-gray-100">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-medium text-gray-600">Total Customers</h3>
+                        <i class="fas fa-users text-blue-600"></i>
+                    </div>
+                    <p class="text-2xl font-bold text-primary" id="totalCustomers">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl card-shadow border border-gray-100">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-medium text-gray-600">This Month</h3>
+                        <i class="fas fa-calendar-plus text-green-600"></i>
+                    </div>
+                    <p class="text-2xl font-bold text-primary" id="newThisMonth">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl card-shadow border border-gray-100">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-medium text-gray-600">VIP Customers</h3>
+                        <i class="fas fa-star text-yellow-600"></i>
+                    </div>
+                    <p class="text-2xl font-bold text-primary" id="vipCustomers">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl card-shadow border border-gray-100">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-medium text-gray-600">Avg. Spend</h3>
+                        <i class="fas fa-dollar-sign text-purple-600"></i>
+                    </div>
+                    <p class="text-2xl font-bold text-primary" id="avgSpend">$0</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Customer List -->
+        <section class="mb-6">
+            <div class="bg-white rounded-xl card-shadow border border-gray-100 overflow-hidden">
+                <div class="p-4 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <h2 class="font-display text-lg font-bold text-primary">Customers</h2>
+                        <div class="flex items-center space-x-2 text-sm text-gray-600">
+                            <span id="customerCount">0 customers</span>
+                            <button onclick="exportCustomers()" class="text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-download"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div id="customerList" class="divide-y divide-gray-200">
+                    <!-- Customer items will be populated by JavaScript -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed nav-bottom bg-white border-t border-gray-200 p-4">
+        <div class="flex justify-around max-w-md mx-auto">
+            <a href="index.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-home text-xl mb-1"></i>
+                <span class="text-xs">Dashboard</span>
+            </a>
+            <a href="customers.html" class="flex flex-col items-center text-blue-600">
+                <i class="fas fa-users text-xl mb-1"></i>
+                <span class="text-xs">Customers</span>
+            </a>
+            <a href="appointments.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-calendar text-xl mb-1"></i>
+                <span class="text-xs">Schedule</span>
+            </a>
+<a href="invoices.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-file-invoice-dollar text-xl mb-1"></i>
+                <span class="text-xs">Invoices</span>
+            </a>
+            <a href="services.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-concierge-bell text-xl mb-1"></i>
+                <span class="text-xs">Services</span>
+            </a>
+            <a href="notifications.html" class="flex flex-col items-center text-gray-600 hover:text-blue-600">
+                <i class="fas fa-bell text-xl mb-1"></i>
+                <span class="text-xs">Alerts</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- New Customer Modal -->
+    <div id="newCustomerModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-md w-full max-h-screen overflow-y-auto">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-display text-xl font-bold">Add New Customer</h3>
+                    <button onclick="closeModal('newCustomerModal')" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="customerForm">
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
+                                <input type="text" id="firstName" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
+                                <input type="text" id="lastName" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
+                            <input type="tel" id="phone" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <input type="email" id="email" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div class="border-t border-gray-200 pt-4">
+                            <h4 class="font-medium text-gray-900 mb-3">Vehicle Information</h4>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Make</label>
+                                    <input type="text" id="vehicleMake" placeholder="e.g., BMW, Mercedes, Audi" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Model</label>
+                                        <input type="text" id="vehicleModel" placeholder="e.g., X5, C-Class" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Year</label>
+                                        <input type="number" id="vehicleYear" placeholder="2023" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Color</label>
+                                    <input type="text" id="vehicleColor" placeholder="e.g., Black, White, Silver" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                            <textarea id="notes" rows="3" placeholder="Special preferences or notes..." class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                        </div>
+                    </div>
+                    <div class="flex space-x-3 mt-6">
+                        <button type="button" onclick="closeModal('newCustomerModal')" class="flex-1 py-3 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" class="flex-1 py-3 px-4 btn-accent text-white rounded-lg hover:opacity-90 transition-opacity">
+                            Add Customer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Quick Details modal removed (no popups) -->
+
+    <script src="config.js"></script>
+  <script src="api-client.js"></script>
+  <script src="main-enhanced.js"></script>
+    <script>
+        let editingCustomerId = null;
+        let editingOriginalFullName = null;
+        let showArchivedCustomers = false;
+
+        function toggleArchivedView(){
+            showArchivedCustomers = !showArchivedCustomers;
+            const btn = document.getElementById('toggleArchivedBtn');
+            if (btn){
+                btn.classList.toggle('bg-gray-900', showArchivedCustomers);
+                btn.classList.toggle('text-white', showArchivedCustomers);
+                btn.classList.toggle('border-gray-900', showArchivedCustomers);
+            }
+            loadCustomers();
+        }
+
+        // Customer management functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCustomers();
+            setupCustomerEventListeners();
+            animateCustomerElements();
+        });
+
+        function loadCustomers() {
+            const customers = (getCustomers() || []).filter(c => {
+                const isArchived = !!c.archived;
+                return showArchivedCustomers ? isArchived : !isArchived;
+            });
+            displayCustomers(customers);
+            updateCustomerStats(customers);
+        }
+
+        function displayCustomers(customers) {
+            const customerList = document.getElementById('customerList');
+            const customerCount = document.getElementById('customerCount');
+            
+            if (customers.length === 0) {
+                customerList.innerHTML = `
+                    <div class="text-center py-12">
+                        <i class="fas fa-users text-4xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500 mb-4">No customers found</p>
+</div>
+                `;
+                customerCount.textContent = '0 customers';
+                return;
+            }
+
+            customerList.innerHTML = customers.map(customer => `
+                <div class="customer-card p-4 hover:bg-gray-50 transition-colors cursor-pointer" onclick="openCustomerProfile('${customer.id}')">
+                    <div class="flex items-center space-x-4">
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                                ${customer.firstName.charAt(0)}${customer.lastName.charAt(0)}
+                            </div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-semibold text-gray-900 truncate">${customer.firstName} ${customer.lastName}</h3>
+                            <p class="text-sm text-gray-600 truncate">${customer.phone}</p>
+                            <p class="text-sm text-gray-500 truncate">
+                                ${customer.vehicleMake || 'No vehicle'} ${customer.vehicleModel || ''}
+                            </p>
+                        </div>
+                        <div class="flex-shrink-0 text-right">
+                            <div class="flex items-center space-x-1 mb-1">
+                                ${customer.totalVisits > 5 ? '<i class="fas fa-star text-yellow-500 text-xs"></i>' : ''}
+                                <span class="text-sm font-medium text-gray-900">${customer.totalVisits || 0} visits</span>
+                            </div>
+                            <p class="text-sm font-semibold text-gray-900">$${customer.totalSpent || 0}</p>
+                            <p class="text-xs text-gray-500">
+                                ${customer.lastVisit ? 'Last: ' + formatDate(customer.lastVisit) : 'New customer'}
+                            </p>
+                            <div class="flex items-center justify-end space-x-2 mt-2">
+                                <!-- Quick details removed (no popup) -->
+                                ${showArchivedCustomers ? `
+                                <button onclick="event.stopPropagation(); permanentDeleteCustomer('${customer.id}')" class="text-red-500 hover:text-red-700 p-1" title="Delete permanently">
+                                    <i class="fas fa-trash"></i>
+                                </button>` : ''}
+                                <i class="fas fa-chevron-right text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            customerCount.textContent = `${customers.length} customers`;
+        }
+
+        function updateCustomerStats(customers) {
+            const totalCustomers = customers.length;
+            const thisMonth = customers.filter(c => {
+                const created = new Date(c.createdAt);
+                const now = new Date();
+                return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear();
+            }).length;
+            const vipCustomers = customers.filter(c => c.totalVisits > 5).length;
+            const avgSpend = totalCustomers > 0 ? Math.round(customers.reduce((sum, c) => sum + (c.totalSpent || 0), 0) / totalCustomers) : 0;
+
+            document.getElementById('totalCustomers').textContent = totalCustomers;
+            document.getElementById('newThisMonth').textContent = thisMonth;
+            document.getElementById('vipCustomers').textContent = vipCustomers;
+            document.getElementById('avgSpend').textContent = `$${avgSpend}`;
+        }
+
+        // Quick-details popup removed. If something still calls this, just go to the full profile.
+        function viewCustomerDetails(customerId) {
+            openCustomerProfile(customerId);
+        }
+
+        function openCustomerProfile(customerId) {
+            window.location.href = `customer-profile.html?id=${encodeURIComponent(customerId)}`;
+        }
+
+        function setupCustomerEventListeners() {
+            // Search functionality
+            const searchInput = document.getElementById('customerSearch');
+            if (searchInput) {
+                searchInput.addEventListener('input', handleCustomerSearch);
+            }
+
+            // Sort functionality
+            const sortSelect = document.getElementById('sortBy');
+            if (sortSelect) {
+                sortSelect.addEventListener('change', handleCustomerSort);
+            }
+
+            // Customer form submission
+            const customerForm = document.getElementById('customerForm');
+            if (customerForm) {
+                customerForm.addEventListener('submit', handleCustomerSubmission);
+            }
+
+            // Filter functionality
+            const filterMake = document.getElementById('filterMake');
+            const filterType = document.getElementById('filterType');
+            const filterLastVisit = document.getElementById('filterLastVisit');
+            
+            if (filterMake) filterMake.addEventListener('change', applyFilters);
+            if (filterType) filterType.addEventListener('change', applyFilters);
+            if (filterLastVisit) filterLastVisit.addEventListener('change', applyFilters);
+        }
+
+        function handleCustomerSearch(e) {
+            const query = e.target.value.toLowerCase();
+            const customers = getCustomers();
+            
+            const filtered = customers.filter(customer => 
+                customer.firstName.toLowerCase().includes(query) ||
+                customer.lastName.toLowerCase().includes(query) ||
+                customer.phone.includes(query) ||
+                (customer.vehicleMake && customer.vehicleMake.toLowerCase().includes(query)) ||
+                (customer.vehicleModel && customer.vehicleModel.toLowerCase().includes(query))
+            );
+            
+            displayCustomers(filtered);
+        }
+
+        function handleCustomerSort(e) {
+            const sortBy = e.target.value;
+            const customers = getCustomers();
+            
+            let sorted = [...customers];
+            
+            switch (sortBy) {
+                case 'name':
+                    sorted.sort((a, b) => `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`));
+                    break;
+                case 'date':
+                    sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                    break;
+                case 'visits':
+                    sorted.sort((a, b) => (b.totalVisits || 0) - (a.totalVisits || 0));
+                    break;
+                case 'spent':
+                    sorted.sort((a, b) => (b.totalSpent || 0) - (a.totalSpent || 0));
+                    break;
+            }
+            
+            displayCustomers(sorted);
+        }
+
+                function handleCustomerSubmission(e) {
+            e.preventDefault();
+
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const newFullName = `${firstName} ${lastName}`.trim();
+
+            const customers = getCustomers();
+            const existing = editingCustomerId ? customers.find(c => c.id === editingCustomerId) : null;
+
+            const customerData = {
+                id: editingCustomerId || generateId(),
+                firstName,
+                lastName,
+                phone: document.getElementById('phone').value,
+                email: document.getElementById('email').value,
+                vehicleMake: document.getElementById('vehicleMake').value,
+                vehicleModel: document.getElementById('vehicleModel').value,
+                vehicleYear: document.getElementById('vehicleYear').value,
+                vehicleColor: document.getElementById('vehicleColor').value,
+                notes: document.getElementById('notes').value,
+                createdAt: existing?.createdAt || new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                totalVisits: existing?.totalVisits || 0,
+                totalSpent: existing?.totalSpent || 0,
+                lastVisit: existing?.lastVisit || null
+            };
+
+            if (editingCustomerId) {
+                updateCustomer(customerData);
+
+                // If the customer name changed, update existing appointments that reference the old name
+                const oldName = (editingOriginalFullName || '').trim();
+                if (oldName && oldName !== newFullName) {
+                    const appointments = JSON.parse(localStorage.getItem('appointments') || '[]');
+                    const updatedAppointments = appointments.map(a => {
+                        if ((a.customer || '').trim() === oldName) {
+                            return { ...a, customer: newFullName };
+                        }
+                        return a;
+                    });
+                    localStorage.setItem('appointments', JSON.stringify(updatedAppointments));
+                }
+
+                showNotification('Customer updated successfully!', 'success');
+            } else {
+                saveCustomer(customerData);
+                showNotification('Customer added successfully!', 'success');
+            }
+
+            editingCustomerId = null;
+            editingOriginalFullName = null;
+
+            closeModal('newCustomerModal');
+            loadCustomers();
+            e.target.reset();
+        }
+
+        function toggleFilters() {
+            const filterOptions = document.getElementById('filterOptions');
+            filterOptions.classList.toggle('hidden');
+        }
+
+        function applyFilters() {
+            const customers = getCustomers();
+            const makeFilter = document.getElementById('filterMake').value;
+            const typeFilter = document.getElementById('filterType').value;
+            const lastVisitFilter = document.getElementById('filterLastVisit').value;
+            
+            let filtered = customers;
+            
+            if (makeFilter) {
+                filtered = filtered.filter(c => c.vehicleMake === makeFilter);
+            }
+            
+            if (typeFilter) {
+                switch (typeFilter) {
+                    case 'regular':
+                        filtered = filtered.filter(c => c.totalVisits > 1 && c.totalVisits <= 5);
+                        break;
+                    case 'new':
+                        filtered = filtered.filter(c => c.totalVisits <= 1);
+                        break;
+                    case 'vip':
+                        filtered = filtered.filter(c => c.totalVisits > 5);
+                        break;
+                }
+            }
+            
+            if (lastVisitFilter) {
+                const now = new Date();
+                const filterDate = new Date();
+                
+                switch (lastVisitFilter) {
+                    case 'week':
+                        filterDate.setDate(now.getDate() - 7);
+                        break;
+                    case 'month':
+                        filterDate.setMonth(now.getMonth() - 1);
+                        break;
+                    case 'quarter':
+                        filterDate.setMonth(now.getMonth() - 3);
+                        break;
+                }
+                
+                filtered = filtered.filter(c => c.lastVisit && new Date(c.lastVisit) >= filterDate);
+            }
+            
+            displayCustomers(filtered);
+        }
+
+        function callCustomer(phone) {
+            window.location.href = `tel:${phone}`;
+        }
+
+        function bookAppointment(customerId) {
+            localStorage.setItem('selectedCustomerId', customerId);
+            window.location.href = 'appointments.html';
+        }
+
+        
+        function deleteCustomer(customerId) {
+            // Close any open customer detail modal before deleting
+            try { closeModal('customerDetailsModal'); } catch(e) {}
+            if (window.ButtonHandlers && typeof ButtonHandlers.deleteCustomer === 'function') {
+                ButtonHandlers.deleteCustomer(customerId);
+            } else {
+                showNotification('Delete handler not available', 'error');
+            }
+        }
+
+        
+        function permanentDeleteCustomer(customerId) {
+            // Close any open customer detail modal before deleting
+            try { closeModal('customerDetailsModal'); } catch(e) {}
+            if (window.ButtonHandlers && typeof ButtonHandlers.permanentDeleteCustomer === 'function') {
+                ButtonHandlers.permanentDeleteCustomer(customerId);
+            } else {
+                showNotification('Permanent delete handler not available', 'error');
+            }
+        }
+
+function restoreCustomer(customerId) {
+            try { closeModal('customerDetailsModal'); } catch(e) {}
+            if (window.ButtonHandlers && typeof ButtonHandlers.restoreCustomer === 'function') {
+                ButtonHandlers.restoreCustomer(customerId);
+            } else {
+                showNotification('Restore handler not available', 'error');
+            }
+        }
+
+function setCustomerModalMode(mode) {
+            const titleEl = document.querySelector('#newCustomerModal h3');
+            const submitBtn = document.querySelector('#customerForm button[type="submit"]');
+            if (mode === 'edit') {
+                if (titleEl) titleEl.textContent = 'Edit Customer';
+                if (submitBtn) submitBtn.textContent = 'Save Changes';
+            } else {
+                if (titleEl) titleEl.textContent = 'New Customer';
+                if (submitBtn) submitBtn.textContent = 'Add Customer';
+            }
+        }
+
+        
+        function openNewCustomerModal() {
+            editingCustomerId = null;
+            editingOriginalFullName = null;
+            setCustomerModalMode('new');
+
+            const form = document.getElementById('customerForm');
+            if (form) form.reset();
+
+            openModal('newCustomerModal');
+        }
+
+function editCustomer(customerId) {
+            const customers = getCustomers();
+            const customer = customers.find(c => c.id === customerId);
+            if (!customer) return;
+
+            editingCustomerId = customerId;
+            editingOriginalFullName = `${customer.firstName} ${customer.lastName}`.trim();
+
+            setCustomerModalMode('edit');
+
+            document.getElementById('firstName').value = customer.firstName || '';
+            document.getElementById('lastName').value = customer.lastName || '';
+            document.getElementById('phone').value = customer.phone || '';
+            document.getElementById('email').value = customer.email || '';
+            document.getElementById('vehicleMake').value = customer.vehicleMake || '';
+            document.getElementById('vehicleModel').value = customer.vehicleModel || '';
+            document.getElementById('vehicleYear').value = customer.vehicleYear || '';
+            document.getElementById('vehicleColor').value = customer.vehicleColor || '';
+            document.getElementById('notes').value = customer.notes || '';
+
+            openModal('newCustomerModal');
+        }
+
+        function updateCustomer(customer) {
+            const customers = getCustomers();
+            const idx = customers.findIndex(c => c.id === customer.id);
+            if (idx === -1) return;
+            customers[idx] = customer;
+            localStorage.setItem('customers', JSON.stringify(customers));
+        }
+
+
+        function exportCustomers() {
+            const customers = getCustomers();
+            const csvContent = "data:text/csv;charset=utf-8," + 
+                "Name,Phone,Email,Vehicle Make,Vehicle Model,Vehicle Year,Total Visits,Total Spent\n" +
+                customers.map(c => 
+                    `"${c.firstName} ${c.lastName}","${c.phone}","${c.email || ''}","${c.vehicleMake || ''}","${c.vehicleModel || ''}","${c.vehicleYear || ''}",${c.totalVisits || 0},${c.totalSpent || 0}`
+                ).join("\n");
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "customers.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showNotification('Customers exported successfully!', 'success');
+        }
+
+        function animateCustomerElements() {
+            anime({
+                targets: '.customer-card',
+                translateY: [20, 0],
+                opacity: [0, 1],
+                delay: anime.stagger(50),
+                duration: 400,
+                easing: 'easeOutCubic'
+            });
+        }
+
+        // Utility functions
+        function formatDate(dateString) {
+            if (!dateString) return 'Never';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        function getCustomers() {
+            return JSON.parse(localStorage.getItem('customers') || '[]');
+        }
+
+        function saveCustomer(customer) {
+            const customers = getCustomers();
+            customers.push(customer);
+            localStorage.setItem('customers', JSON.stringify(customers));
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm ${
+                type === 'success' ? 'bg-emerald-500 text-white' : 
+                type === 'error' ? 'bg-red-500 text-white' : 
+                'bg-blue-500 text-white'
+            }`;
+            notification.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <i class="fas ${
+                        type === 'success' ? 'fa-check-circle' :
+                        type === 'error' ? 'fa-exclamation-circle' :
+                        'fa-info-circle'
+                    }"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+
+            document.body.appendChild(notification);
+
+            anime({
+                targets: notification,
+                translateX: [300, 0],
+                opacity: [0, 1],
+                duration: 300,
+                easing: 'easeOutCubic'
+            });
+
+            setTimeout(() => {
+                anime({
+                    targets: notification,
+                    translateX: [0, 300],
+                    opacity: [1, 0],
+                    duration: 300,
+                    easing: 'easeInCubic',
+                    complete: () => {
+                        document.body.removeChild(notification);
+                    }
+                });
+            }, 3000);
+        }
+
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+                
+                anime({
+                    targets: modal.querySelector('.bg-white'),
+                    scale: [0.8, 1],
+                    opacity: [0, 1],
+                    duration: 300,
+                    easing: 'easeOutCubic'
+                });
+            }
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                anime({
+                    targets: modal.querySelector('.bg-white'),
+                    scale: [1, 0.8],
+                    opacity: [1, 0],
+                    duration: 200,
+                    easing: 'easeInCubic',
+                    complete: function() {
+                        modal.classList.add('hidden');
+                        document.body.style.overflow = 'auto';
+                    }
+                });
+            }
+        }
+    
+        // Auto-open modal when arriving from dashboard quick actions
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+
+            const editId = params.get('edit');
+            if (editId) {
+                editCustomer(editId);
+                params.delete('edit');
+            } else if (params.get('add') === 'true') {
+                openNewCustomerModal();
+                params.delete('add');
+            }
+
+            // Clean URL params after auto-open
+            const qs = params.toString();
+            const newUrl = window.location.pathname + (qs ? `?${qs}` : '');
+            window.history.replaceState({}, document.title, newUrl);
+        });
+</script>
+</body>
+</html>
